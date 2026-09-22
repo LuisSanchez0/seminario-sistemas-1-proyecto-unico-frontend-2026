@@ -51,8 +51,8 @@ let nextId = 0;
         }
       </div>
       @if (selected()) {
-        <p class="text-sm mt-2">
-          Seleccionada: <strong>{{ selected()?.name }}</strong>
+        <p class="text-base-content/80 mt-2 text-sm">
+          Seleccionada: <strong class="text-base-content">{{ selected()?.name }}</strong>
         </p>
       }
       @if (open()) {
@@ -70,18 +70,37 @@ let nextId = 0;
                 role="option"
                 [id]="id + '-option-' + index"
                 [attr.aria-selected]="value() === brand.id"
-                class="min-h-11 rounded-lg px-3 py-3 cursor-pointer hover:bg-base-200"
-                [class.bg-base-200]="active() === index"
+                class="hover:bg-base-200 flex min-h-11 cursor-pointer items-center gap-2 rounded-lg px-3 py-3"
+                [class]="
+                  active() === index
+                    ? 'bg-base-200 ring-primary font-semibold ring-1 ring-inset'
+                    : ''
+                "
                 (pointerdown)="$event.preventDefault()"
                 (click)="select(brand)"
               >
-                {{ brand.name }}
+                <span class="min-w-0 flex-1 break-words">{{ brand.name }}</span>
                 @if (value() === brand.id) {
-                  <span aria-hidden="true"> ✓</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                    class="size-4 shrink-0"
+                  >
+                    <path
+                      d="m4.5 12.75 6 6 9-13.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
                 }
               </li>
             } @empty {
-              <li role="presentation" class="p-3">No hay marcas coincidentes.</li>
+              <li role="presentation" class="text-base-content/80 p-3 text-sm">
+                No hay marcas coincidentes.
+              </li>
             }
           </ul>
           @if (allowCreate()) {

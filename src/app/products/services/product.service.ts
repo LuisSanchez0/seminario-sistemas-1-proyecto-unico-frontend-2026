@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { concatMap, finalize, from, map, Observable, of, tap, toArray } from 'rxjs';
+import { concatMap, finalize, from, map, Observable, of, shareReplay, tap, toArray } from 'rxjs';
 import { NotificationService, apiErrorMessage } from '../../shared/services/notification.service';
 import { environment } from '../../../environments/environment';
 import {
@@ -24,11 +24,20 @@ export class ProductService {
   private readonly notifications = inject(NotificationService);
   private readonly productsCache = new Map<string, ProductsResponse>();
   private readonly productCache = new Map<string, Product>();
+  private readonly subcategoryRequests = new Map<
+    ProductCategory,
+    Observable<ProductSubcategory[]>
+  >();
+  private readonly subcategoryCache = signal<
+    Partial<Record<ProductCategory, ProductSubcategory[]>>
+  >({});
+  readonly subcategoriesByCategory = this.subcategoryCache.asReadonly();
   readonly products = signal<Product[]>([]);
   readonly productsLoading = signal(false);
   private readonly productsPage = signal(0);
 
   clearProductsCache(): void {
+    this.subcategoryCache.set({});
     this.productsCache.clear();
     this.productCache.clear();
     this.products.set([]);
@@ -180,8 +189,22 @@ export class ProductService {
       .get<{ ok: boolean; subcategories: ProductSubcategory[] }>(`${baseUrl}/${endpoint}`)
       .pipe(map((response) => response.subcategories.filter((item) => item.state !== false)));
   }
-  getSubcategoriesByCategory(category: ProductCategory): Observable<ProductSubcategory[]> {
-    return this.getSubcategories(category);
+  getSubcategoriesByCategory(
+    category: ProductCategory,
+    refresh = false,
+  ): Observable<ProductSubcategory[]> {
+    const cached = this.subcategoryCache()[category];
+    if (cached && !refresh) return of(cached);
+    const pending = this.subcategoryRequests.get(category);
+    if (pending) return pending;
+    const request = this.getSubcategories(category).pipe(
+      map((items) => items.filter((item) => item.category === category)),
+      tap((items) => this.subcategoryCache.update((cache) => ({ ...cache, [category]: items }))),
+      finalize(() => this.subcategoryRequests.delete(category)),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    );
+    this.subcategoryRequests.set(category, request);
+    return request;
   }
   getSubcategoryById(id: string): Observable<ProductSubcategory> {
     return this.http

@@ -65,7 +65,10 @@ export class FormUtils {
           if (errors['pattern'].requiredPattern === FormUtils.codePattern) {
             return 'lucir como un código de verificación';
           }
-          return 'lucir contra expresión regular';
+          if (errors['pattern'].requiredPattern === FormUtils.slugPattern) {
+            return 'usar solo minúsculas, números y guiones';
+          }
+          return 'tener un formato válido';
 
         default:
           return `Error de validación no controlado ${key}`;

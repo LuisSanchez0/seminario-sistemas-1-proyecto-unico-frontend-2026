@@ -2,21 +2,14 @@
   aria-labelledby="summary-heading"
   class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-6 sm:p-6 lg:p-8"
 >
-  <h2
-    id="summary-heading"
-    class="text-lg font-semibold text-gray-900"
-  >
-    Resumen del pedido
-  </h2>
+  <h2 id="summary-heading" class="text-lg font-semibold text-gray-900">Resumen del pedido</h2>
 
   <dl class="mt-6 space-y-4">
     <!-- Item count -->
     <div class="flex items-center justify-between">
-      <dt class="text-sm text-gray-600">
-        Artículos ({{ itemCount() }})
-      </dt>
+      <dt class="text-sm text-gray-600">Artículos ({{ itemCount() }})</dt>
       <dd class="text-sm font-medium text-gray-900">
-        {{ total() | currency : 'GTQ' : 'symbol' : '1.2-2' : 'es-GT' }}
+        {{ total() | currency: 'GTQ' : 'symbol' : '1.2-2' : 'es-GT' }}
       </dd>
     </div>
 
@@ -32,7 +25,7 @@
     <div class="flex items-center justify-between border-t border-gray-200 pt-4">
       <dt class="text-base font-semibold text-gray-900">Total</dt>
       <dd class="text-base font-bold text-indigo-600">
-        {{ total() | currency : 'GTQ' : 'symbol' : '1.2-2' : 'es-GT' }}
+        {{ total() | currency: 'GTQ' : 'symbol' : '1.2-2' : 'es-GT' }}
       </dd>
     </div>
   </dl>
@@ -44,8 +37,19 @@
       class="flex w-full items-center justify-center gap-2 rounded-lg border border-transparent bg-indigo-600 px-4 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
     >
       Proceder al pago
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+        />
       </svg>
     </a>
   </div>
@@ -53,7 +57,7 @@
   <!-- Secondary CTA -->
   <div class="mt-4 text-center">
     <a
-      routerLink="/products/all/all"
+      routerLink="/products"
       class="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
     >
       o continúa comprando
@@ -62,7 +66,7 @@
   </div>
 
   <!-- Policies note -->
-  <p class="mt-6 text-center text-xs text-gray-400">
+  <p class="mt-6 text-center text-xs text-gray-600">
     Envío y descuentos se calculan al finalizar la compra.
   </p>
 </section>

@@ -1,362 +1,142 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   computed,
-  CUSTOM_ELEMENTS_SCHEMA,
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { CurrencyPipe } from '@angular/common';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { catchError, EMPTY, finalize, map, merge, Subject, switchMap, tap } from 'rxjs';
 import { ProductService } from '../../../products/services/product.service';
-import {
-  Category,
-  Product,
-  ProductSize,
-  Size,
-} from '../../../products/interfaces/product.interface';
-import { ProductImagePipe } from '../../../products/pipes/product-image.pipe';
+import { Product, categoryLabel } from '../../../products/interfaces/product.interface';
 import { ProductCarouselComponent } from '../../../products/components/product-carousel/product-carousel.component';
+import { StoreFront } from '../../services/store-front';
 import {
-  GORRA_PLACEMENT_OPTIONS,
-  LogoPlacementSelectorComponent,
-  NO_LOGO_VALUE,
-  PLACEMENT_OPTIONS,
-  PlacementOption,
-} from '../../components/logo-placement-selector/logo-placement-selector.component';
-import { LogoUploadFieldComponent } from '../../components/logo-upload-field/logo-upload-field.component';
-import {
-  fileToBase64,
-  StoreFront,
-} from '../../services/store-front';
-import { NotificationService } from '../../../shared/services/notification.service';
+  NotificationService,
+  apiErrorMessage,
+} from '../../../shared/services/notification.service';
 
 @Component({
   selector: 'app-product-page',
-  standalone: true,
   templateUrl: './product-page.component.html',
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    ProductImagePipe,
-    ProductCarouselComponent,
-    LogoPlacementSelectorComponent,
-    LogoUploadFieldComponent,
-  ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [CurrencyPipe, ReactiveFormsModule, ProductCarouselComponent, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProductPageComponent {
-
-  selectedSize = signal<ProductSize | null>(null);
-
-  readonly logoLocation = signal<string>(NO_LOGO_VALUE);
-
-  readonly specialInstructions = signal<string>('');
-
-  readonly logoPreviewUrl = signal<string | null>(null);
-
-  readonly NO_LOGO = NO_LOGO_VALUE;
-
-  readonly requiresLogoUpload = computed(
-    () => this.logoLocation() !== NO_LOGO_VALUE
-  );
-
-  // ── Gorra detection ────────────────────────────────────────────────────────
-
-  readonly isGorra = computed(() => {
-    const p = this.product();
-    if (!p) return false;
-    const normalized = (p.category as string)?.trim().toLowerCase();
-    return normalized === Category.Gorra.toLowerCase();
-  });
-
-  // ── Filtered sizes for display (gorra → only TALLA UNICA) ─────────────────
-
-  readonly displayedSizes = computed((): ProductSize[] => {
-    const p = this.product();
-    if (!p?.sizes?.length) return [];
-    if (this.isGorra()) {
-      const tallaUnica = p.sizes.find((s) => s.size === Size.TallaUnica);
-      return tallaUnica ? [tallaUnica] : [];
-    }
-    return p.sizes;
-  });
-
-  // ── Logo placement options (gorra → only CENTER + NO_LOGO) ────────────────
-
-  readonly gorraLogoOptions = computed((): PlacementOption[] =>
-    this.isGorra() ? GORRA_PLACEMENT_OPTIONS : PLACEMENT_OPTIONS
-  );
-
-  /**
-   * Remaining stock available for the selected size, accounting for units
-   * already reserved across ALL cart lines with the same product + size
-   * (regardless of logoLocation).
-   */
-  readonly remainingStock = computed(() => {
-    const size = this.selectedSize();
-    const p = this.product();
-    if (!size || !p || size.stock <= 0) return 0;
-    const reserved = this.cartStore.getReservedQuantity(p._id, size.size);
-    return Math.max(0, size.stock - reserved);
-  });
-
-  readonly hasSizes = computed(() => this.displayedSizes().length > 0);
-
-  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly route = inject(ActivatedRoute);
   private readonly productService = inject(ProductService);
   private readonly cartStore = inject(StoreFront);
   private readonly notifications = inject(NotificationService);
-
-  private readonly productIdSlug =
-    this.activatedRoute.snapshot.params['idSlug'];
-
-  readonly productResource = rxResource<Product | null, { idSlug: string }>({
-    params: () => ({ idSlug: this.productIdSlug }),
-    stream: ({ params }) =>
-      this.productService.getProductBySlug(params.idSlug),
-    defaultValue: null,
+  private readonly retry = new Subject<void>();
+  readonly product = signal<Product | null>(null);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
+  readonly adding = signal(false);
+  readonly categoryLabel = categoryLabel;
+  readonly images = computed(() => this.product()?.images.map((image) => image.url) ?? []);
+  readonly remainingStock = computed(() => {
+    const product = this.product();
+    return product
+      ? Math.max(0, product.stock - this.cartStore.getReservedQuantity(product.id))
+      : 0;
   });
+  readonly quantityControl = new FormControl(1, { nonNullable: true });
+  readonly form = new FormGroup({ quantity: this.quantityControl });
+  readonly quantity = toSignal(this.quantityControl.valueChanges, { initialValue: 1 });
+  readonly canAdd = computed(
+    () =>
+      !!this.product() &&
+      !this.loading() &&
+      !this.adding() &&
+      Number.isInteger(this.quantity()) &&
+      this.quantity() >= 1 &&
+      this.quantity() <= this.remainingStock(),
+  );
 
-  readonly product = computed<Product | null>(() => this.productResource.value() ?? null);
-
-  readonly form: FormGroup;
-
-  constructor(private readonly fb: FormBuilder) {
-    this.form = this.fb.group({
-      size: [null, Validators.required],
-      quantity: [
-        { value: 1, disabled: true },
-        [Validators.required, Validators.min(1)],
-      ],
-      logoLocation: [NO_LOGO_VALUE, Validators.required],
-      logoFile: [null],
-    });
-
-    this.setupLogoValidation();
-    this.setupSizeListener();
-    this.setupProductEffect();
-    this.setupRemainingStockEffect();
-  }
-
-  private setupLogoValidation(): void {
-    this.form.get('logoLocation')!.valueChanges.subscribe((value: string) => {
-      this.logoLocation.set(value);
-
-      if (value === NO_LOGO_VALUE) {
-        this.form.get('logoFile')!.setValue(null, { emitEvent: false });
-        this.logoPreviewUrl.set(null);
-      }
-    });
-
-    this.form.get('logoFile')!.valueChanges.subscribe((file: File | null) => {
-      if (file instanceof File) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.logoPreviewUrl.set(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        this.logoPreviewUrl.set(null);
-      }
-    });
-
+  constructor() {
+    merge(this.route.paramMap, this.retry.pipe(map(() => this.route.snapshot.paramMap)))
+      .pipe(
+        switchMap((params) => {
+          this.loading.set(true);
+          this.error.set(null);
+          this.product.set(null);
+          this.quantityControl.setValue(1);
+          return this.productService.getProductBySlug(params.get('idSlug') ?? '').pipe(
+            tap((product) => this.product.set(product)),
+            catchError((error: unknown) => {
+              const message = apiErrorMessage(error);
+              this.error.set(message);
+              this.notifications.error('No se pudo cargar el producto', message);
+              return EMPTY;
+            }),
+            finalize(() => this.loading.set(false)),
+          );
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe();
     effect(() => {
-      const logoFileCtrl = this.form.get('logoFile')!;
-
-      if (this.requiresLogoUpload()) {
-        logoFileCtrl.setValidators([Validators.required]);
-      } else {
-        logoFileCtrl.clearValidators();
-      }
-
-      logoFileCtrl.updateValueAndValidity({ emitEvent: false });
-    });
-  }
-
-  private setupSizeListener(): void {
-    const sizeCtrl = this.form.get('size')!;
-    const quantityCtrl = this.form.get('quantity')!;
-
-    sizeCtrl.valueChanges.subscribe((sizeValue: string | null) => {
-      const p = this.product();
-
-      if (!p || !sizeValue) {
-        this.selectedSize.set(null);
-        quantityCtrl.disable();
-        quantityCtrl.setValue(1);
-        return;
-      }
-
-      const sizeObj =
-        p.sizes?.find((s: ProductSize) => s.size === sizeValue) ?? null;
-      this.selectedSize.set(sizeObj);
-
-      if (!sizeObj || sizeObj.stock <= 0) {
-        quantityCtrl.disable();
-        quantityCtrl.setValue(1);
-        return;
-      }
-
-      quantityCtrl.setValidators([Validators.required, Validators.min(1)]);
-      quantityCtrl.updateValueAndValidity({ emitEvent: false });
-      quantityCtrl.enable();
-      quantityCtrl.setValue(1);
-    });
-  }
-
-  /**
-   * Keeps the quantity form validator's max in sync with remainingStock.
-   */
-  private setupRemainingStockEffect(): void {
-    effect(() => {
-      const remaining = this.remainingStock();
-      const quantityCtrl = this.form.get('quantity')!;
-
-      if (!quantityCtrl.enabled) return;
-
-      if (remaining > 0) {
-        quantityCtrl.setValidators([
+      const stock = this.remainingStock();
+      untracked(() => {
+        this.quantityControl.setValidators([
           Validators.required,
           Validators.min(1),
-          Validators.max(remaining),
+          Validators.max(stock),
+          Validators.pattern(/^\d+$/),
         ]);
-      } else {
-        quantityCtrl.setValidators([
-          Validators.required,
-          Validators.min(1),
-          Validators.max(0),
-        ]);
-      }
-
-      quantityCtrl.updateValueAndValidity({ emitEvent: false });
+        if (stock > 0) this.quantityControl.enable({ emitEvent: false });
+        else this.quantityControl.disable({ emitEvent: false });
+        this.setQuantity(this.quantityControl.value);
+      });
     });
   }
 
-  private setupProductEffect(): void {
-    const sizeCtrl = this.form.get('size')!;
-    const quantityCtrl = this.form.get('quantity')!;
-    const logoLocationCtrl = this.form.get('logoLocation')!;
-
-    effect(() => {
-      const p = this.product();
-      if (!p) return;
-
-      const isGorra = this.isGorra();
-
-      if (this.hasSizes()) {
-        sizeCtrl.enable();
-
-        if (isGorra) {
-          // Gorras use only TALLA UNICA
-          const tallaUnica =
-            p.sizes?.find((s: ProductSize) => s.size === Size.TallaUnica) ??
-            null;
-
-          sizeCtrl.setValue(Size.TallaUnica);
-
-          if (!tallaUnica || tallaUnica.stock <= 0) {
-            quantityCtrl.disable();
-            quantityCtrl.setValue(1);
-          }
-        } else {
-          const firstAvailableSize =
-            p.sizes?.find((s: ProductSize) => s.stock > 0) ?? null;
-
-          if (firstAvailableSize) {
-            sizeCtrl.setValue(firstAvailableSize.size);
-          } else {
-            sizeCtrl.setValue(null);
-            quantityCtrl.disable();
-            this.selectedSize.set(null);
-            quantityCtrl.setValue(1);
-          }
-        }
-      } else {
-        sizeCtrl.disable();
-        this.selectedSize.set(null);
-        quantityCtrl.enable();
-        quantityCtrl.setValidators([Validators.required, Validators.min(1)]);
-        quantityCtrl.updateValueAndValidity();
-        quantityCtrl.setValue(1);
-      }
-
-      // ── Reset logo location when switching product categories ──────────────
-      const currentLogoLoc = logoLocationCtrl.value as string;
-      const gorraValues = GORRA_PLACEMENT_OPTIONS.map((o) => o.value);
-
-      if (isGorra && !gorraValues.includes(currentLogoLoc)) {
-        // Clothing placement selected → reset to no-logo for gorra
-        logoLocationCtrl.setValue(NO_LOGO_VALUE);
-        this.logoLocation.set(NO_LOGO_VALUE);
-        this.form.get('logoFile')!.setValue(null, { emitEvent: false });
-        this.logoPreviewUrl.set(null);
-      } else if (!isGorra && currentLogoLoc === 'centro-gorra') {
-        // Coming from a gorra → reset cap placement to no-logo
-        logoLocationCtrl.setValue(NO_LOGO_VALUE);
-        this.logoLocation.set(NO_LOGO_VALUE);
-        this.form.get('logoFile')!.setValue(null, { emitEvent: false });
-        this.logoPreviewUrl.set(null);
-      }
-    });
-  }
-
-  async onSubmit(): Promise<void> {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
-    const p = this.product();
-    if (!p) return;
-
-    const { size, quantity, logoLocation, logoFile } = this.form.getRawValue();
-
-    let imgLogo: string | null = null;
-    if (logoFile instanceof File) {
-      imgLogo = await fileToBase64(logoFile);
-    }
-
-    const stockForSize = this.selectedSize()?.stock ?? null;
-
-    const result = this.cartStore.addToCart({
-      product: {
-        _id: p._id,
-        slug: p.slug,
-        title: p.title,
-        price: p.price,
-        imageUrl: p.images?.[0]?.url ?? '',
-      },
-      size: size ?? 'no-size',
-      quantity,
-      logoLocation,
-      imgLogo,
-      stockForSize,
-      specialInstructions: this.specialInstructions().trim(),
-    });
-
-    if (!result.success) {
-      const sizeLabel = size ?? 'única';
-      const available = result.available;
-      this.notifications.error(
-        'Stock insuficiente',
-        available > 0
-          ? `Solo puedes agregar ${available} unidad${available === 1 ? '' : 'es'} más para la talla ${sizeLabel}.`
-          : `Has llegado al límite de stock disponible para la talla ${sizeLabel}.`
-      );
-      return;
-    }
-
-    this.notifications.success(
-      `${p.title} agregado al carrito`,
-      `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} · Talla ${size ?? 'única'}`
+  setQuantity(value: number): void {
+    const max = this.remainingStock();
+    this.quantityControl.setValue(
+      max > 0 ? Math.min(Math.max(Number.isFinite(value) ? Math.trunc(value) : 1, 1), max) : 0,
     );
+  }
+  reload(): void {
+    this.retry.next();
+  }
+
+  onSubmit(): void {
+    const product = this.product();
+    if (!product || !this.canAdd() || this.form.invalid) return;
+    this.adding.set(true);
+    try {
+      const quantity = this.quantityControl.value;
+      const result = this.cartStore.addToCart({
+        product: {
+          id: product.id,
+          title: product.title,
+          slug: product.slug,
+          price: product.price,
+          stock: product.stock,
+          imageUrl: product.images[0]?.url ?? '/images/product-placeholder.svg',
+        },
+        quantity,
+      });
+      if (!result.success) {
+        this.notifications.error(
+          'Stock insuficiente',
+          `Puedes agregar ${result.available} unidades más.`,
+        );
+        return;
+      }
+      this.notifications.success(
+        `${product.title} agregado al carrito`,
+        `${quantity} ${quantity === 1 ? 'unidad' : 'unidades'}`,
+      );
+      this.setQuantity(1);
+    } finally {
+      this.adding.set(false);
+    }
   }
 }

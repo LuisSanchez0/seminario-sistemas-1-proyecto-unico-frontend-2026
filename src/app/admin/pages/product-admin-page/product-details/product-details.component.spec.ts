@@ -16,6 +16,7 @@ import { environment } from '../../../../../environments/environment';
 })
 class CarouselStub {
   images = input.required<string[]>();
+  productTitle = input('Producto');
 }
 const url = environment.baseUrl;
 const brand = { id: '000000000000000000000003', name: 'Maybelline', slug: 'maybelline' };

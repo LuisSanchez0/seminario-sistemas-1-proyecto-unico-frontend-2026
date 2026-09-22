@@ -1,269 +1,697 @@
-<div class="max-w-6xl mx-auto space-y-6">
-  <header>
-    <a routerLink="/admin/products" class="link inline-block py-3">Volver al catálogo</a>
-    <h1 class="text-3xl font-bold">{{ productId() ? 'Editar producto' : 'Nuevo producto' }}</h1>
-    <p class="mt-2">Organiza tu catálogo de belleza, inventario e imágenes.</p>
-  </header>
-  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-6">
-    <fieldset
-      [disabled]="busy()"
-      class="card bg-base-100 border border-base-300 p-5 sm:p-7 space-y-4"
-    >
-      <legend class="sr-only">Información básica</legend>
-      <h2 class="text-xl font-bold">Información básica</h2>
-      <label for="product-title" class="font-medium">Nombre</label>
-      <input
-        id="product-title"
-        class="input input-bordered w-full"
-        formControlName="title"
-        placeholder="Fit Me Matte + Poreless"
-        aria-describedby="title-error"
-      />
-      <form-error-label
-        id="title-error"
-        [control]="productForm.controls.title"
-        name="El nombre debe "
-      />
-      <label for="product-description" class="font-medium">Descripción</label>
-      <textarea
-        id="product-description"
-        class="textarea textarea-bordered w-full"
-        formControlName="description"
-        rows="4"
-        aria-describedby="description-error"
-      ></textarea>
-      <form-error-label
-        id="description-error"
-        [control]="productForm.controls.description"
-        name="La descripción debe "
-      />
-      <label for="product-slug" class="font-medium">Slug</label>
-      <input
-        id="product-slug"
-        class="input input-bordered w-full"
-        formControlName="slug"
-        aria-describedby="slug-error"
-      />
-      <form-error-label
-        id="slug-error"
-        [control]="productForm.controls.slug"
-        name="El slug debe "
-      />
-    </fieldset>
-
-    <fieldset
-      [disabled]="busy()"
-      class="card bg-base-100 border border-base-300 p-5 sm:p-7 space-y-6"
-    >
-      <legend class="sr-only">Clasificación</legend>
-      <h2 class="text-xl font-bold">Clasificación</h2>
-      <fieldset>
-        <legend class="font-medium mb-3">Categoría</legend>
-        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-          @for (option of categoryOptions; track option.value) {
-            <label
-              class="flex items-center gap-3 rounded-xl border border-base-300 p-3 min-h-14 cursor-pointer hover:bg-base-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:checked]:border-primary has-[:checked]:bg-base-200"
+<div class="mx-auto max-w-6xl space-y-6">
+  <header class="border-base-300 bg-base-100 rounded-2xl border shadow-sm">
+    <div class="border-base-300 space-y-4 border-b p-5 sm:p-6">
+      <nav aria-label="Ruta de navegación">
+        <ol class="flex flex-wrap items-center gap-2 text-sm">
+          <li>
+            <a routerLink="/admin/products" class="link link-hover font-medium">Productos</a>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li class="min-w-0 font-medium break-words" aria-current="page">{{ headerTitle() }}</li>
+        </ol>
+      </nav>
+      <div class="min-w-0 space-y-2">
+        @if (brandName()) {
+          <p class="text-sm font-semibold">{{ brandName() }}</p>
+        }
+        <h1 class="text-2xl font-bold break-words md:text-3xl">{{ headerTitle() }}</h1>
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          @if (productState() !== undefined) {
+            <span
+              class="badge"
+              [class.badge-success]="productState()"
+              [class.badge-error]="!productState()"
+              >{{ productState() ? 'Activo' : 'Inactivo' }}</span
             >
-              <input
-                type="radio"
-                class="radio radio-primary shrink-0"
-                formControlName="category"
-                [value]="option.value"
-              />
-              <span>{{ option.label }}</span>
-            </label>
+          }
+          @if (categoryName()) {
+            <span class="badge badge-outline">{{ categoryName() }}</span>
+          }
+          @if (subcategoryName()) {
+            <span class="badge badge-outline">{{ subcategoryName() }}</span>
           }
         </div>
-      </fieldset>
-      <section aria-labelledby="subcategory-label">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h3 id="subcategory-label" class="font-medium">Subcategoría</h3>
-          <button
-            type="button"
-            class="btn btn-ghost"
-            (click)="subcategoryManager.open(selectedCategory())"
-          >
-            Administrar subcategorías
-          </button>
-        </div>
-        @if (!selectedCategory()) {
-          <p>Selecciona primero una categoría.</p>
-        } @else if (subcategoriesResource.isLoading()) {
-          <p role="status">Cargando subcategorías…</p>
-        } @else if (subcategoriesResource.error()) {
-          <p role="alert" class="alert alert-error">
-            {{ apiErrorMessage(subcategoriesResource.error()) }}
-            <button type="button" class="btn" (click)="subcategoriesResource.reload()">
-              Reintentar
-            </button>
-          </p>
-        } @else {
-          <div class="flex flex-wrap gap-3">
-            @for (item of subcategoriesResource.value(); track item.id) {
-              <button
-                type="button"
-                class="btn min-h-12 h-auto py-3 whitespace-normal"
-                [class.btn-primary]="formValue().subcategory === item.id"
-                [attr.aria-pressed]="formValue().subcategory === item.id"
-                (click)="chooseSubcategory(item.id)"
-              >
-                @if (formValue().subcategory === item.id) {
-                  <span aria-hidden="true">✓</span>
-                }
-                {{ item.name }}
-              </button>
-            } @empty {
-              <p class="w-full">No hay subcategorías en esta categoría. Crea la primera.</p>
-            }
-            <button
-              type="button"
-              class="btn btn-outline border-dashed min-h-12"
-              (click)="subcategoryManager.create('', selectedCategory())"
-            >
-              + Nueva subcategoría
-            </button>
-          </div>
-        }
-        <form-error-label
-          [control]="productForm.controls.subcategory"
-          name="El campo subcategoría debe "
-        />
-      </section>
-      <section>
-        <app-brand-autocomplete
-          [brands]="brands()"
-          [value]="formValue().brand ?? ''"
-          [disabled]="busy() || brandsResource.isLoading()"
-          (selectionChange)="chooseBrand($event)"
-          (createRequested)="brandManager.create($event)"
-        />
-        <form-error-label [control]="productForm.controls.brand" name="El campo marca debe " />
-        @if (brandsResource.isLoading()) {
-          <p role="status">Cargando marcas…</p>
-        }
-        @if (brandsResource.error()) {
-          <p role="alert" class="alert alert-error">
-            {{ apiErrorMessage(brandsResource.error()) }}
-            <button type="button" class="btn" (click)="brandsResource.reload()">Reintentar</button>
-          </p>
-        }
-        <button type="button" class="btn btn-ghost mt-2" (click)="brandManager.open()">
-          Administrar marcas
-        </button>
-      </section>
-    </fieldset>
+      </div>
+    </div>
 
-    <fieldset [disabled]="busy()" class="card bg-base-100 border border-base-300 p-5 sm:p-7">
-      <legend class="sr-only">Precio e inventario</legend>
-      <h2 class="text-xl font-bold mb-5">Precio e inventario</h2>
-      <div class="grid sm:grid-cols-2 gap-5">
-        <div>
-          <label for="product-price" class="block font-medium mb-2">Precio (Q)</label>
-          <input
-            id="product-price"
-            type="number"
-            min="0"
-            step="0.01"
-            class="input input-bordered w-full"
-            formControlName="price"
-            aria-describedby="price-error"
-          />
-          <form-error-label
-            id="price-error"
-            [control]="productForm.controls.price"
-            name="El precio debe "
-          />
+    <div
+      class="grid gap-6 p-5 sm:p-6 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-8 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]"
+    >
+      <section aria-label="Vista previa del producto" class="min-w-0 space-y-3">
+        <div
+          class="border-base-300 bg-base-200 rounded-2xl border p-3 [--swiper-theme-color:var(--color-base-content)]"
+        >
+          <product-carousel [images]="imagesToCarousel()" [productTitle]="headerTitle()" />
         </div>
-        <div>
-          <label for="product-stock" class="block font-medium mb-2">Stock disponible</label>
-          <input
-            id="product-stock"
-            type="number"
-            min="0"
-            class="input input-bordered w-full"
-            formControlName="stock"
-            aria-describedby="stock-error"
-          />
-          <form-error-label
-            id="stock-error"
-            [control]="productForm.controls.stock"
-            name="El stock debe "
-          />
+        <p class="text-base-content/80 text-center text-sm">
+          @if (imageCount() === 0) {
+            No hay imágenes disponibles
+          } @else if (imageCount() === 1) {
+            1 imagen en la galería
+          } @else {
+            {{ imageCount() }} imágenes en la galería
+          }
+        </p>
+      </section>
+
+      <dl class="grid min-w-0 gap-x-6 gap-y-5 sm:grid-cols-2 md:content-start">
+        <div class="min-w-0">
+          <dt class="text-base-content/80 text-sm font-medium">Precio</dt>
+          <dd class="mt-1">
+            @if (price() !== null) {
+              <span class="text-2xl font-semibold">{{
+                price() | currency: 'GTQ' : 'Q' : '1.2-2'
+              }}</span>
+            } @else {
+              <span class="text-base-content/80 font-medium">Sin precio definido</span>
+            }
+          </dd>
+        </div>
+        <div class="min-w-0">
+          <dt class="text-base-content/80 text-sm font-medium">Inventario</dt>
+          <dd class="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <span class="text-2xl font-semibold">{{ stockCount() }}</span>
+            <span class="text-sm">{{ stockCount() === 1 ? 'unidad' : 'unidades' }}</span>
+            <span
+              class="badge"
+              [class.badge-success]="stockLevel() === 'ok'"
+              [class.badge-warning]="stockLevel() === 'low'"
+              [class.badge-error]="stockLevel() === 'out'"
+              >{{ stockLabel() }}</span
+            >
+          </dd>
+        </div>
+        <div class="min-w-0">
+          <dt class="text-base-content/80 text-sm font-medium">Marca</dt>
+          <dd class="mt-1 font-medium break-words">
+            {{ brandName() || 'Sin marca asignada' }}
+          </dd>
+        </div>
+        <div class="min-w-0">
+          <dt class="text-base-content/80 text-sm font-medium">Categoría</dt>
+          <dd class="mt-1 font-medium break-words">
+            @if (categoryName()) {
+              {{ categoryName() }}
+              @if (subcategoryName()) {
+                <span aria-hidden="true">·</span>
+                {{ subcategoryName() }}
+              }
+            } @else {
+              Sin clasificar
+            }
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </header>
+
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    <section
+      class="border-base-300 bg-base-100 rounded-2xl border shadow-sm"
+      aria-labelledby="basic-heading"
+    >
+      <div class="border-base-300 flex items-start gap-3 border-b p-5 sm:px-6">
+        <span
+          class="bg-base-200 grid size-10 shrink-0 place-items-center rounded-xl"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="size-5"
+          >
+            <path
+              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h2 id="basic-heading" class="text-lg font-semibold">Información básica</h2>
+          <p class="text-base-content/80 text-sm">Cómo se identifica el producto en la tienda.</p>
         </div>
       </div>
-    </fieldset>
+      <fieldset [disabled]="busy()" class="space-y-5 p-5 sm:p-6">
+        <legend class="sr-only">Información básica</legend>
+        <div>
+          <label for="product-title" class="mb-2 block font-medium">Nombre</label>
+          <input
+            id="product-title"
+            class="input input-bordered w-full"
+            formControlName="title"
+            placeholder="Fit Me Matte + Poreless"
+            aria-describedby="title-error"
+          />
+          <form-error-label
+            id="title-error"
+            [control]="productForm.controls.title"
+            name="El nombre debe "
+          />
+        </div>
+        <div>
+          <label for="product-slug" class="mb-2 block font-medium">Slug</label>
+          <input
+            id="product-slug"
+            class="input input-bordered w-full font-mono"
+            formControlName="slug"
+            aria-describedby="slug-help slug-error"
+          />
+          <p id="slug-help" class="text-base-content/80 mt-2 text-sm">
+            Identificador para la URL pública. Se genera desde el nombre y puedes editarlo.
+          </p>
+          <form-error-label
+            id="slug-error"
+            [control]="productForm.controls.slug"
+            name="El slug debe "
+          />
+        </div>
+      </fieldset>
+    </section>
 
     <section
-      class="card bg-base-100 border border-base-300 p-5 sm:p-7 space-y-4"
-      aria-labelledby="images-title"
+      class="border-base-300 bg-base-100 rounded-2xl border shadow-sm"
+      aria-labelledby="classification-heading"
     >
-      <h2 id="images-title" class="text-xl font-bold">Imágenes</h2>
-      <div class="min-w-0 max-w-lg mx-auto w-full">
-        <product-carousel [images]="imagesToCarousel()" />
-      </div>
-      <label for="product-images" class="font-medium">Añadir imágenes</label>
-      <input
-        id="product-images"
-        type="file"
-        class="file-input file-input-bordered w-full"
-        multiple
-        accept="image/*"
-        [disabled]="busy()"
-        (change)="onFilesChanged($event)"
-      />
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        @for (image of currentImages(); track image.key; let index = $index) {
-          <div class="rounded-xl border border-base-300 p-2">
-            <img
-              [src]="image.url"
-              [alt]="'Imagen ' + (index + 1) + ' del producto'"
-              class="w-full aspect-square object-contain rounded-lg"
+      <div class="border-base-300 flex items-start gap-3 border-b p-5 sm:px-6">
+        <span
+          class="bg-base-200 grid size-10 shrink-0 place-items-center rounded-xl"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="size-5"
+          >
+            <path
+              d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h2 id="classification-heading" class="text-lg font-semibold">Clasificación</h2>
+          <p class="text-base-content/80 text-sm">Dónde aparece el producto dentro del catálogo.</p>
+        </div>
+      </div>
+      <fieldset [disabled]="busy()" class="space-y-6 p-5 sm:p-6">
+        <legend class="sr-only">Clasificación</legend>
+
+        <fieldset>
+          <legend class="mb-3 font-medium">Categoría</legend>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+            @for (option of categoryOptions; track option.value) {
+              <label
+                class="border-base-300 hover:bg-base-200 has-[:focus-visible]:outline-primary has-[:checked]:border-primary has-[:checked]:bg-primary/15 has-[:disabled]:cursor-not-allowed flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2"
+              >
+                <input
+                  type="radio"
+                  class="radio radio-primary shrink-0"
+                  formControlName="category"
+                  [value]="option.value"
+                />
+                <span class="text-sm font-medium">{{ option.label }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <section aria-labelledby="subcategory-label" class="space-y-3">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h3 id="subcategory-label" class="font-medium">Subcategoría</h3>
+              <p class="text-base-content/80 text-sm">
+                Elige una opción de la categoría seleccionada.
+              </p>
+            </div>
             <button
               type="button"
-              class="btn btn-ghost w-full mt-2"
-              [disabled]="busy()"
-              [attr.aria-label]="'Eliminar imagen ' + (index + 1)"
-              (click)="askDeleteImage(image)"
+              class="btn btn-ghost btn-sm"
+              (click)="subcategoryManager.open(selectedCategory())"
             >
-              Eliminar
+              Administrar subcategorías
             </button>
           </div>
-        }
-        @for (image of pendingImages(); track image.url; let index = $index) {
-          <div class="rounded-xl border border-dashed border-base-300 p-2">
-            <img
-              [src]="image.url"
-              [alt]="'Vista previa ' + (index + 1)"
-              class="w-full aspect-square object-contain rounded-lg"
-            />
-            <p class="text-sm text-center">Pendiente de guardar</p>
-            <button
-              type="button"
-              class="btn btn-ghost w-full"
-              [disabled]="busy()"
-              [attr.aria-label]="'Quitar imagen pendiente ' + (index + 1)"
-              (click)="removePending(image)"
-            >
-              Quitar
+          @if (!selectedCategory()) {
+            <p class="border-base-300 bg-base-200 rounded-xl border border-dashed p-4 text-sm">
+              Selecciona primero una categoría para ver sus subcategorías.
+            </p>
+          } @else if (subcategoriesResource.isLoading()) {
+            <div class="flex flex-wrap gap-3">
+              <p role="status" class="sr-only">Cargando subcategorías…</p>
+              <span class="skeleton h-11 w-28" aria-hidden="true"></span>
+              <span class="skeleton h-11 w-36" aria-hidden="true"></span>
+              <span class="skeleton h-11 w-24" aria-hidden="true"></span>
+            </div>
+          } @else if (subcategoriesResource.error()) {
+            <div role="alert" class="alert alert-error flex-wrap">
+              <span>{{ apiErrorMessage(subcategoriesResource.error()) }}</span>
+              <button type="button" class="btn btn-sm" (click)="subcategoriesResource.reload()">
+                Reintentar
+              </button>
+            </div>
+          } @else {
+            <div class="flex flex-wrap gap-3">
+              @for (item of subcategoriesResource.value(); track item.id) {
+                <button
+                  type="button"
+                  class="btn h-auto min-h-11 gap-2 py-2 whitespace-normal"
+                  [class.btn-primary]="formValue().subcategory === item.id"
+                  [attr.aria-pressed]="formValue().subcategory === item.id"
+                  (click)="chooseSubcategory(item.id)"
+                >
+                  @if (formValue().subcategory === item.id) {
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                      class="size-4 shrink-0"
+                    >
+                      <path
+                        d="m4.5 12.75 6 6 9-13.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  }
+                  {{ item.name }}
+                </button>
+              } @empty {
+                <p
+                  class="border-base-300 bg-base-200 w-full rounded-xl border border-dashed p-4 text-sm"
+                >
+                  No hay subcategorías en esta categoría. Crea la primera.
+                </p>
+              }
+              <button
+                type="button"
+                class="btn btn-outline min-h-11 gap-2 border-dashed"
+                (click)="subcategoryManager.create('', selectedCategory())"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                  class="size-4 shrink-0"
+                >
+                  <path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Nueva subcategoría
+              </button>
+            </div>
+          }
+          <form-error-label
+            [control]="productForm.controls.subcategory"
+            name="El campo subcategoría debe "
+          />
+        </section>
+
+        <section aria-label="Marca" class="space-y-3">
+          <app-brand-autocomplete
+            [brands]="brands()"
+            [value]="formValue().brand ?? ''"
+            [disabled]="busy() || brandsResource.isLoading()"
+            (selectionChange)="chooseBrand($event)"
+            (createRequested)="brandManager.create($event)"
+          />
+          <form-error-label [control]="productForm.controls.brand" name="El campo marca debe " />
+          @if (brandsResource.isLoading()) {
+            <p role="status" class="text-base-content/80 text-sm">Cargando marcas…</p>
+          }
+          @if (brandsResource.error()) {
+            <div role="alert" class="alert alert-error flex-wrap">
+              <span>{{ apiErrorMessage(brandsResource.error()) }}</span>
+              <button type="button" class="btn btn-sm" (click)="brandsResource.reload()">
+                Reintentar
+              </button>
+            </div>
+          }
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-base-content/80 text-sm">
+              ¿No encuentras la marca? Puedes crearla o editarla sin salir de esta página.
+            </p>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="brandManager.open()">
+              Administrar marcas
             </button>
+          </div>
+        </section>
+      </fieldset>
+    </section>
+
+    <section
+      class="border-base-300 bg-base-100 rounded-2xl border shadow-sm"
+      aria-labelledby="pricing-heading"
+    >
+      <div class="border-base-300 flex items-start gap-3 border-b p-5 sm:px-6">
+        <span
+          class="bg-base-200 grid size-10 shrink-0 place-items-center rounded-xl"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="size-5"
+          >
+            <path
+              d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h2 id="pricing-heading" class="text-lg font-semibold">Precio e inventario</h2>
+          <p class="text-base-content/80 text-sm">Lo que verá el cliente al comprar.</p>
+        </div>
+      </div>
+      <fieldset [disabled]="busy()" class="p-5 sm:p-6">
+        <legend class="sr-only">Precio e inventario</legend>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="product-price" class="mb-2 block font-medium">Precio (Q)</label>
+            <div class="relative">
+              <span
+                class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 font-medium"
+                aria-hidden="true"
+                >Q</span
+              >
+              <input
+                id="product-price"
+                type="number"
+                min="0"
+                step="0.01"
+                inputmode="decimal"
+                class="input input-bordered w-full pl-9"
+                formControlName="price"
+                aria-describedby="price-error"
+              />
+            </div>
+            <form-error-label
+              id="price-error"
+              [control]="productForm.controls.price"
+              name="El precio debe "
+            />
+          </div>
+          <div>
+            <label for="product-stock" class="mb-2 block font-medium">Stock disponible</label>
+            <input
+              id="product-stock"
+              type="number"
+              min="0"
+              inputmode="numeric"
+              class="input input-bordered w-full"
+              formControlName="stock"
+              aria-describedby="stock-status stock-error"
+            />
+            <p id="stock-status" class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+              <span
+                class="badge"
+                [class.badge-success]="stockLevel() === 'ok'"
+                [class.badge-warning]="stockLevel() === 'low'"
+                [class.badge-error]="stockLevel() === 'out'"
+                >{{ stockLabel() }}</span
+              >
+              <span class="text-base-content/80">{{ stockHint() }}</span>
+            </p>
+            <form-error-label
+              id="stock-error"
+              [control]="productForm.controls.stock"
+              name="El stock debe "
+            />
+          </div>
+        </div>
+      </fieldset>
+    </section>
+
+    <section
+      class="border-base-300 bg-base-100 rounded-2xl border shadow-sm"
+      aria-labelledby="description-heading"
+    >
+      <div class="border-base-300 flex items-start gap-3 border-b p-5 sm:px-6">
+        <span
+          class="bg-base-200 grid size-10 shrink-0 place-items-center rounded-xl"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="size-5"
+          >
+            <path
+              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h2 id="description-heading" class="text-lg font-semibold">Descripción</h2>
+          <p class="text-base-content/80 text-sm">
+            Textura, acabado y modo de uso para la ficha pública.
+          </p>
+        </div>
+      </div>
+      <fieldset [disabled]="busy()" class="p-5 sm:p-6">
+        <legend class="sr-only">Descripción</legend>
+        <label for="product-description" class="mb-2 block font-medium">
+          Descripción del producto
+        </label>
+        <textarea
+          id="product-description"
+          class="textarea textarea-bordered w-full leading-relaxed"
+          formControlName="description"
+          rows="6"
+          placeholder="Base líquida de acabado mate diseñada para…"
+          aria-describedby="description-help description-error"
+        ></textarea>
+        <p id="description-help" class="text-base-content/80 mt-2 text-sm">
+          Usa al menos 10 caracteres. Este texto se muestra en la tienda.
+        </p>
+        <form-error-label
+          id="description-error"
+          [control]="productForm.controls.description"
+          name="La descripción debe "
+        />
+      </fieldset>
+    </section>
+
+    <section
+      class="border-base-300 bg-base-100 rounded-2xl border shadow-sm"
+      aria-labelledby="images-heading"
+    >
+      <div class="border-base-300 flex items-start gap-3 border-b p-5 sm:px-6">
+        <span
+          class="bg-base-200 grid size-10 shrink-0 place-items-center rounded-xl"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            class="size-5"
+          >
+            <path
+              d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h2 id="images-heading" class="text-lg font-semibold">Imágenes</h2>
+          <p class="text-base-content/80 text-sm">
+            La primera imagen se usa como portada del catálogo.
+          </p>
+        </div>
+      </div>
+      <div class="space-y-5 p-5 sm:p-6">
+        <div class="border-base-300 bg-base-200 rounded-2xl border border-dashed p-4 sm:p-5">
+          <label for="product-images" class="mb-2 block font-medium">Añadir imágenes</label>
+          <input
+            id="product-images"
+            type="file"
+            class="file-input file-input-bordered w-full"
+            multiple
+            accept="image/*"
+            [disabled]="busy()"
+            aria-describedby="images-help"
+            (change)="onFilesChanged($event)"
+          />
+          <p id="images-help" class="mt-2 text-sm">
+            Puedes seleccionar varias a la vez. Se suben al guardar el producto.
+          </p>
+        </div>
+
+        @if (currentImages().length || pendingImages().length) {
+          <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            @for (image of currentImages(); track image.key; let index = $index) {
+              <li class="border-base-300 bg-base-100 relative rounded-xl border p-2">
+                <img
+                  [src]="image.url"
+                  [alt]="'Imagen ' + (index + 1) + ' de ' + headerTitle()"
+                  class="aspect-square w-full rounded-lg object-contain"
+                />
+                <div
+                  class="tooltip absolute top-3 right-3"
+                  [attr.data-tip]="'Eliminar imagen ' + (index + 1)"
+                >
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-circle btn-error shadow-sm"
+                    [disabled]="busy()"
+                    [attr.aria-label]="'Eliminar imagen ' + (index + 1)"
+                    (click)="askDeleteImage(image)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      aria-hidden="true"
+                      class="size-4"
+                    >
+                      <path
+                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </li>
+            }
+            @for (image of pendingImages(); track image.url; let index = $index) {
+              <li class="border-base-300 bg-base-100 relative rounded-xl border border-dashed p-2">
+                <img
+                  [src]="image.url"
+                  [alt]="'Vista previa ' + (index + 1)"
+                  class="aspect-square w-full rounded-lg object-contain"
+                />
+                <div
+                  class="tooltip absolute top-3 right-3"
+                  [attr.data-tip]="'Quitar imagen pendiente ' + (index + 1)"
+                >
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-circle shadow-sm"
+                    [disabled]="busy()"
+                    [attr.aria-label]="'Quitar imagen pendiente ' + (index + 1)"
+                    (click)="removePending(image)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      aria-hidden="true"
+                      class="size-4"
+                    >
+                      <path
+                        d="M6 18 18 6M6 6l12 12"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <p class="mt-2 text-center">
+                  <span class="badge badge-warning badge-sm">Pendiente de subir</span>
+                </p>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="border-base-300 rounded-2xl border border-dashed p-8 text-center">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+              class="mx-auto size-10"
+            >
+              <path
+                d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <p class="mt-3 font-medium">No hay imágenes disponibles</p>
+            <p class="text-base-content/80 mt-1 text-sm">
+              Añade al menos una para mostrar el producto en el catálogo.
+            </p>
           </div>
         }
       </div>
     </section>
+
     @if (saveError()) {
-      <p role="alert" class="alert alert-error">{{ saveError() }}</p>
+      <div role="alert" class="alert alert-error">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+          class="size-5 shrink-0"
+        >
+          <path
+            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-2.994-1.5-3.86 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span>{{ saveError() }}</span>
+      </div>
     }
-    <div class="flex flex-wrap justify-end gap-3 pb-6">
-      <button type="button" class="btn" routerLink="/admin/products" [disabled]="busy()">
-        Cancelar
-      </button>
-      <button type="submit" class="btn btn-primary min-w-40" [disabled]="!canSave()">
-        @if (saving() || uploading()) {
-          <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+
+    <div
+      class="border-base-300 bg-base-100 sticky bottom-4 z-20 flex flex-wrap items-center gap-3 rounded-2xl border p-4 shadow-sm sm:px-6"
+    >
+      <p class="text-base-content/80 hidden text-sm sm:block">
+        @if (pendingImages().length === 1) {
+          1 imagen pendiente de subir.
+        } @else if (pendingImages().length > 1) {
+          {{ pendingImages().length }} imágenes pendientes de subir.
+        } @else {
+          Los cambios se aplican al guardar.
         }
-        {{ uploading() ? 'Subiendo imágenes…' : saving() ? 'Guardando…' : 'Guardar producto' }}
-      </button>
+      </p>
+      <div class="ml-auto flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          routerLink="/admin/products"
+          [disabled]="busy()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary min-w-44"
+          [disabled]="!canSave()"
+          [attr.aria-busy]="busy()"
+        >
+          @if (saving() || uploading()) {
+            <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+          }
+          {{ uploading() ? 'Subiendo imágenes…' : saving() ? 'Guardando…' : 'Guardar producto' }}
+        </button>
+      </div>
     </div>
   </form>
 </div>
@@ -271,7 +699,7 @@
 <app-catalog-manager #subcategoryManager kind="subcategory" (changed)="catalogChanged($event)" />
 <app-confirm-dialog
   title="Eliminar imagen"
-  message="¿Eliminar esta imagen del producto?"
+  message="¿Eliminar esta imagen del producto? Esta acción no se puede deshacer."
   [busy]="deletingImage()"
   [error]="imageError()"
   (confirmed)="deleteImage()"

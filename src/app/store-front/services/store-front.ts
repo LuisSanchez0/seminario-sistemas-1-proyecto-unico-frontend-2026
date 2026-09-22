@@ -2,64 +2,32 @@ import { computed, effect, inject, Injectable, signal, untracked } from '@angula
 import { AuthService } from '../../auth/services/auth.service';
 
 const GUEST_ID_KEY = 'prowear_guest_id';
-const CART_USER_PREFIX  = 'cart_user_';
-const CART_GUEST_PREFIX = 'cart_guest_';
+const CART_USER_PREFIX = 'cart_cosmetics_v1_user_';
+const CART_GUEST_PREFIX = 'cart_cosmetics_v1_guest_';
 
-// ── Domain interfaces ─────────────────────────────────────────────────────────
-
+// Product snapshot retained by the existing local signal store.
 export interface CartProductRef {
-  _id: string;
+  id: string;
   slug: string;
   title: string;
   price: number;
   imageUrl: string;
+  stock: number;
 }
 
 export interface CartItem {
   product: CartProductRef;
-  size: string;
-  logoLocation: string;
-  imgLogo: string | null;
   quantity: number;
-  stockForSize: number | null;
-  specialInstructions?: string;
 }
 
-export interface AddToCartInput {
-  product: CartProductRef;
-  size: string;
-  logoLocation: string;
-  imgLogo?: string | null;
-  quantity: number;
-  stockForSize?: number | null;
-  specialInstructions?: string;
-}
-
+export type AddToCartInput = CartItem;
 export type AddToCartResult =
-  | { success: true }
-  | {
-      success: false;
-      reserved: number;
-      available: number;
-    };
-
-export type CartItemUpdate = Partial<
-  Pick<CartItem, 'quantity' | 'logoLocation' | 'imgLogo' | 'specialInstructions'>
->;
-
+  { success: true } | { success: false; reserved: number; available: number };
+export type CartItemUpdate = Pick<CartItem, 'quantity'>;
 export interface CartSummary {
   total: number;
   itemCount: number;
   lineCount: number;
-}
-
-export function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -71,7 +39,49 @@ function generateGuestId(): string {
 function loadFromStorage(key: string): CartItem[] {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as CartItem[]) : [];
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(parsed)) return [];
+    const items: CartItem[] = [];
+    for (const value of parsed) {
+      if (typeof value !== 'object' || value === null) continue;
+      const product: unknown = value.product;
+      if (typeof product !== 'object' || product === null) continue;
+      const p = product as Record<string, unknown>;
+      if (
+        typeof p['id'] !== 'string' ||
+        !p['id'] ||
+        typeof p['title'] !== 'string' ||
+        typeof p['slug'] !== 'string' ||
+        typeof p['imageUrl'] !== 'string' ||
+        typeof p['price'] !== 'number' ||
+        !Number.isFinite(p['price']) ||
+        p['price'] < 0 ||
+        typeof p['stock'] !== 'number' ||
+        !Number.isInteger(p['stock']) ||
+        p['stock'] <= 0 ||
+        !Number.isInteger(value.quantity) ||
+        value.quantity < 1
+      )
+        continue;
+      const existing = items.find((item) => item.product.id === p['id']);
+      const quantity = Math.min(value.quantity + (existing?.quantity ?? 0), p['stock']);
+      if (existing) {
+        existing.quantity = quantity;
+        continue;
+      }
+      items.push({
+        product: {
+          id: p['id'],
+          title: p['title'],
+          slug: p['slug'],
+          imageUrl: p['imageUrl'],
+          price: p['price'],
+          stock: p['stock'],
+        },
+        quantity,
+      });
+    }
+    return items;
   } catch {
     return [];
   }
@@ -85,7 +95,6 @@ function saveToStorage(key: string, items: CartItem[]): void {
   }
 }
 
-
 @Injectable({ providedIn: 'root' })
 export class StoreFront {
   private readonly authService = inject(AuthService);
@@ -95,22 +104,17 @@ export class StoreFront {
 
   private readonly _storageKey = computed<string>(() => {
     const uid = this.authService.user()?.uid;
-    return uid
-      ? `${CART_USER_PREFIX}${uid}`
-      : `${CART_GUEST_PREFIX}${this.guestId}`;
+    return uid ? `${CART_USER_PREFIX}${uid}` : `${CART_GUEST_PREFIX}${this.guestId}`;
   });
 
   readonly cartItems = this._cartItems.asReadonly();
 
   readonly cartTotal = computed(() =>
-    this._cartItems().reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0
-    )
+    this._cartItems().reduce((sum, item) => sum + item.product.price * item.quantity, 0),
   );
 
   readonly cartItemCount = computed(() =>
-    this._cartItems().reduce((sum, item) => sum + item.quantity, 0)
+    this._cartItems().reduce((sum, item) => sum + item.quantity, 0),
   );
 
   readonly cartLineCount = computed(() => this._cartItems().length);
@@ -122,8 +126,7 @@ export class StoreFront {
   }));
 
   constructor() {
-    this.guestId =
-      localStorage.getItem(GUEST_ID_KEY) ?? this._createGuestId();
+    this.guestId = localStorage.getItem(GUEST_ID_KEY) ?? this._createGuestId();
 
     effect(
       () => {
@@ -156,7 +159,7 @@ export class StoreFront {
           this._cartItems.set(loadFromStorage(key));
         }
       },
-      { allowSignalWrites: true }
+      { allowSignalWrites: true },
     );
 
     effect(() => {
@@ -166,147 +169,55 @@ export class StoreFront {
     });
   }
 
-  getReservedQuantity(productId: string, size: string): number {
-    return this._cartItems().reduce(
-      (sum, item) =>
-        item.product._id === productId && item.size === size
-          ? sum + item.quantity
-          : sum,
-      0
-    );
+  getReservedQuantity(productId: string): number {
+    return this._cartItems().find((item) => item.product.id === productId)?.quantity ?? 0;
   }
 
-  addToCart(input: AddToCartInput): AddToCartResult {
-    const {
-      product,
-      size,
-      quantity,
-      logoLocation,
-      imgLogo = null,
-      stockForSize = null,
-      specialInstructions = '',
-    } = input;
-
-    const normalizedInstructions = specialInstructions.trim();
-
-    if (stockForSize !== null) {
-      const currentReserved = this.getReservedQuantity(product._id, size);
-
-      if (currentReserved + quantity > stockForSize) {
-        const available = Math.max(0, stockForSize - currentReserved);
-        return { success: false, reserved: currentReserved, available };
-      }
+  addToCart({ product, quantity }: AddToCartInput): AddToCartResult {
+    const reserved = this.getReservedQuantity(product.id);
+    const available = Math.max(0, product.stock - reserved);
+    if (
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      !Number.isInteger(product.stock) ||
+      quantity > available
+    ) {
+      return { success: false, reserved, available };
     }
-
+    const snapshot: CartProductRef = {
+      id: product.id,
+      title: product.title,
+      slug: product.slug,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      stock: product.stock,
+    };
     this._cartItems.update((items) => {
-      const existingIndex = items.findIndex(
-        (item) =>
-          item.product._id === product._id &&
-          item.size === size &&
-          item.logoLocation === logoLocation &&
-          (item.specialInstructions ?? '') === normalizedInstructions
-      );
-
-      if (existingIndex >= 0) {
-        const updated = [...items];
-        const existing = updated[existingIndex];
-        updated[existingIndex] = {
-          ...existing,
-          quantity: existing.quantity + quantity,
-          imgLogo: imgLogo ?? existing.imgLogo,
-          stockForSize: stockForSize ?? existing.stockForSize,
-        };
-        return updated;
-      }
-
-      return [
-        ...items,
-        {
-          product,
-          size,
-          quantity,
-          logoLocation,
-          imgLogo,
-          stockForSize,
-          specialInstructions: normalizedInstructions,
-        },
-      ];
+      const line = { product: snapshot, quantity: reserved + quantity };
+      return reserved > 0
+        ? items.map((item) => (item.product.id === product.id ? line : item))
+        : [...items, line];
     });
-
     return { success: true };
   }
 
-  removeFromCart(
-    productId: string,
-    size: string,
-    logoLocation: string,
-    specialInstructions = ''
-  ): void {
-    const normalized = specialInstructions.trim();
-    this._cartItems.update((items) =>
-      items.filter(
-        (item) =>
-          !(
-            item.product._id === productId &&
-            item.size === size &&
-            item.logoLocation === logoLocation &&
-            (item.specialInstructions ?? '') === normalized
-          )
-      )
-    );
+  removeFromCart(productId: string): void {
+    this._cartItems.update((items) => items.filter((item) => item.product.id !== productId));
   }
 
-  updateCartItem(
-    productId: string,
-    size: string,
-    logoLocation: string,
-    changes: CartItemUpdate,
-    specialInstructions = ''
-  ): boolean {
-    const normalized = specialInstructions.trim();
-
-    if (changes.quantity !== undefined) {
-      const targetItem = this._cartItems().find(
-        (item) =>
-          item.product._id === productId &&
-          item.size === size &&
-          item.logoLocation === logoLocation &&
-          (item.specialInstructions ?? '') === normalized
-      );
-
-      const stock = targetItem?.stockForSize ?? null;
-
-      if (stock !== null && targetItem) {
-        const reservedByOthers =
-          this.getReservedQuantity(productId, size) - targetItem.quantity;
-
-        const maxAllowedForThisLine = stock - reservedByOthers;
-
-        if (changes.quantity > maxAllowedForThisLine) {
-          return false; // blocked — caller should show a toast
-        }
-      }
-    }
-
-    this._cartItems.update((items) => {
-      const mapped = items.map((item) =>
-        item.product._id === productId &&
-        item.size === size &&
-        item.logoLocation === logoLocation &&
-        (item.specialInstructions ?? '') === normalized
-          ? { ...item, ...changes }
-          : item
-      );
-      return mapped.filter((item) => item.quantity > 0);
-    });
-
+  updateCartItem(productId: string, { quantity }: CartItemUpdate): boolean {
+    const target = this._cartItems().find((item) => item.product.id === productId);
+    if (!target || !Number.isInteger(quantity) || quantity < 1 || quantity > target.product.stock)
+      return false;
+    this._cartItems.update((items) =>
+      items.map((item) => (item.product.id === productId ? { ...item, quantity } : item)),
+    );
     return true;
   }
 
   clearCart(): void {
     this._cartItems.set([]);
   }
-
 
   private _createGuestId(): string {
     const id = generateGuestId();

@@ -1,73 +1,124 @@
 <dialog #dialog class="modal" [attr.aria-labelledby]="kind() + '-manager-title'">
-  <div class="modal-box w-11/12 max-w-2xl max-h-[85dvh] overflow-y-auto">
-    <div class="flex items-center justify-between gap-3 mb-5">
-      <h2 [id]="kind() + '-manager-title'" class="text-xl font-bold">
-        Administrar {{ kind() === 'brand' ? 'marcas' : 'subcategorías' }}
-      </h2>
-      <button type="button" class="btn btn-ghost" (click)="dialog.close()">Cerrar</button>
-    </div>
-    @if (kind() === 'subcategory') {
-      <label for="manager-category" class="block font-medium">Categoría</label>
-      <select
-        #categorySelect
-        id="manager-category"
-        class="select select-bordered w-full mb-4"
-        [value]="category()"
-        (change)="setCategory(categorySelect.value)"
-      >
-        @for (option of categoryOptions; track option.value) {
-          <option [value]="option.value">{{ option.label }}</option>
-        }
-      </select>
-    }
-    <label [for]="kind() + '-manager-search'" class="block font-medium"
-      >Buscar {{ kind() === 'brand' ? 'marcas' : 'subcategorías' }}</label
+  <div class="modal-box max-h-[85dvh] w-11/12 max-w-2xl overflow-y-auto p-0">
+    <div
+      class="border-base-300 bg-base-100 sticky top-0 z-10 flex items-start justify-between gap-3 border-b p-5 sm:px-6"
     >
-    <input
-      #searchInput
-      [id]="kind() + '-manager-search'"
-      type="search"
-      class="input input-bordered w-full"
-      [value]="search()"
-      (input)="search.set(searchInput.value)"
-    />
-    <button type="button" class="btn btn-primary my-4" (click)="create()">
-      + Nueva {{ noun() }}
-    </button>
-    @if (loading()) {
-      <p role="status">Cargando catálogo…</p>
-    } @else if (error()) {
-      <div role="alert" class="alert alert-error">
-        {{ error() }} <button type="button" class="btn" (click)="load()">Reintentar</button>
+      <div class="min-w-0">
+        <h2 [id]="kind() + '-manager-title'" class="text-lg font-semibold">
+          Administrar {{ kind() === 'brand' ? 'marcas' : 'subcategorías' }}
+        </h2>
+        <p class="text-base-content/80 text-sm">
+          Crea, edita o elimina {{ kind() === 'brand' ? 'marcas' : 'subcategorías' }} del catálogo.
+        </p>
       </div>
-    } @else {
-      <ul class="divide-y divide-base-300">
-        @for (item of filtered(); track item.id) {
-          <li class="py-3 flex flex-wrap gap-2 items-center">
-            <span class="flex-1 min-w-32 break-words font-medium">{{ item.name }}</span>
-            <button
-              type="button"
-              class="btn btn-ghost"
-              [attr.aria-label]="'Editar ' + item.name"
-              (click)="edit(item)"
-            >
-              Editar
-            </button>
-            <button
-              type="button"
-              class="btn btn-outline border-error"
-              [disabled]="deleting()"
-              [attr.aria-label]="'Eliminar ' + item.name"
-              (click)="askDelete(item)"
-            >
-              Eliminar
-            </button>
-          </li>
-        } @empty {
-          <li class="py-5">No hay resultados. Puedes crear una {{ noun() }}.</li>
-        }
-      </ul>
-    }
+      <button
+        type="button"
+        class="btn btn-sm btn-circle btn-ghost shrink-0"
+        aria-label="Cerrar"
+        (click)="dialog.close()"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+          class="size-5"
+        >
+          <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="space-y-4 p-5 sm:p-6">
+      @if (kind() === 'subcategory') {
+        <div>
+          <label for="manager-category" class="mb-2 block font-medium">Categoría</label>
+          <select
+            #categorySelect
+            id="manager-category"
+            class="select select-bordered w-full"
+            [value]="category()"
+            (change)="setCategory(categorySelect.value)"
+          >
+            @for (option of categoryOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+      }
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="min-w-48 flex-1">
+          <label [for]="kind() + '-manager-search'" class="mb-2 block font-medium">
+            Buscar {{ kind() === 'brand' ? 'marcas' : 'subcategorías' }}
+          </label>
+          <input
+            #searchInput
+            [id]="kind() + '-manager-search'"
+            type="search"
+            class="input input-bordered w-full"
+            [value]="search()"
+            (input)="search.set(searchInput.value)"
+          />
+        </div>
+        <button type="button" class="btn btn-primary gap-2" (click)="create()">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            aria-hidden="true"
+            class="size-4 shrink-0"
+          >
+            <path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Nueva {{ noun() }}
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="space-y-3">
+          <p role="status" class="sr-only">Cargando catálogo…</p>
+          @for (row of [1, 2, 3]; track row) {
+            <div class="skeleton h-12 w-full" aria-hidden="true"></div>
+          }
+        </div>
+      } @else if (error()) {
+        <div role="alert" class="alert alert-error flex-wrap">
+          <span>{{ error() }}</span>
+          <button type="button" class="btn btn-sm" (click)="load()">Reintentar</button>
+        </div>
+      } @else {
+        <ul class="divide-base-300 border-base-300 divide-y rounded-xl border">
+          @for (item of filtered(); track item.id) {
+            <li class="flex flex-wrap items-center gap-2 p-3">
+              <span class="min-w-32 flex-1 font-medium break-words">{{ item.name }}</span>
+              <button
+                type="button"
+                class="btn btn-sm btn-ghost"
+                [attr.aria-label]="'Editar ' + item.name"
+                (click)="edit(item)"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-ghost hover:bg-error/25"
+                [disabled]="deleting()"
+                [attr.aria-label]="'Eliminar ' + item.name"
+                (click)="askDelete(item)"
+              >
+                Eliminar
+              </button>
+            </li>
+          } @empty {
+            <li class="text-base-content/80 p-6 text-center text-sm">
+              No hay resultados. Puedes crear una {{ noun() }}.
+            </li>
+          }
+        </ul>
+      }
+    </div>
   </div>
 </dialog>
 <dialog
@@ -77,42 +128,64 @@
   (cancel)="saving() ? $event.preventDefault() : null"
 >
   <form [formGroup]="form" (ngSubmit)="save()" class="modal-box max-h-[85dvh] overflow-y-auto">
-    <h2 [id]="kind() + '-editor-title'" class="text-xl font-bold mb-5">
+    <h2 [id]="kind() + '-editor-title'" class="text-lg font-semibold">
       {{ editing() ? 'Editar' : 'Nueva' }} {{ noun() }}
     </h2>
     @if (kind() === 'subcategory') {
-      <p class="mb-4">
-        Categoría: <strong>{{ categoryLabel(category()) }}</strong>
+      <p class="text-base-content/80 mt-1 text-sm">
+        Categoría: <strong class="text-base-content">{{ categoryLabel(category()) }}</strong>
       </p>
     }
-    <fieldset [disabled]="saving()" class="space-y-3">
-      <label [for]="kind() + '-name'" class="block font-medium">Nombre</label>
-      <input
-        [id]="kind() + '-name'"
-        class="input input-bordered w-full"
-        formControlName="name"
-        (input)="suggestSlug()"
-        autofocus
-      />
-      @if (form.controls.name.touched && form.controls.name.invalid) {
-        <p class="text-base-content font-medium">Escribe un nombre.</p>
-      }
-      <label [for]="kind() + '-slug'" class="block font-medium">Slug</label>
-      <input [id]="kind() + '-slug'" class="input input-bordered w-full" formControlName="slug" />
-      @if (form.controls.slug.touched && form.controls.slug.invalid) {
-        <p class="text-base-content font-medium">
-          Usa al menos 3 caracteres: letras minúsculas, números y guiones.
-        </p>
-      }
+    <fieldset [disabled]="saving()" class="mt-5 space-y-5">
+      <legend class="sr-only">Datos de la {{ noun() }}</legend>
+      <div>
+        <label [for]="kind() + '-name'" class="mb-2 block font-medium">Nombre</label>
+        <input
+          [id]="kind() + '-name'"
+          class="input input-bordered w-full"
+          formControlName="name"
+          autofocus
+          (input)="suggestSlug()"
+        />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <p
+            role="alert"
+            class="bg-error/20 text-base-content mt-2 rounded-lg px-3 py-2 text-sm font-medium"
+          >
+            Escribe un nombre.
+          </p>
+        }
+      </div>
+      <div>
+        <label [for]="kind() + '-slug'" class="mb-2 block font-medium">Slug</label>
+        <input
+          [id]="kind() + '-slug'"
+          class="input input-bordered w-full font-mono"
+          formControlName="slug"
+        />
+        @if (form.controls.slug.touched && form.controls.slug.invalid) {
+          <p
+            role="alert"
+            class="bg-error/20 text-base-content mt-2 rounded-lg px-3 py-2 text-sm font-medium"
+          >
+            Usa al menos 3 caracteres: letras minúsculas, números y guiones.
+          </p>
+        }
+      </div>
     </fieldset>
     @if (editorError()) {
-      <p role="alert" class="alert alert-error mt-4">{{ editorError() }}</p>
+      <div role="alert" class="alert alert-error mt-5">
+        <span>{{ editorError() }}</span>
+      </div>
     }
     <div class="modal-action flex-wrap">
-      <button type="button" class="btn" [disabled]="saving()" (click)="editor.close()">
+      <button type="button" class="btn btn-ghost" [disabled]="saving()" (click)="editor.close()">
         Cancelar
       </button>
       <button type="submit" class="btn btn-primary" [disabled]="saving() || form.invalid">
+        @if (saving()) {
+          <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+        }
         {{ saving() ? 'Guardando…' : editing() ? 'Guardar cambios' : 'Crear ' + noun() }}
       </button>
     </div>

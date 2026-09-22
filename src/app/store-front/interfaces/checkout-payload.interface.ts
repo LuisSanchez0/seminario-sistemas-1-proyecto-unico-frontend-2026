@@ -11,11 +11,7 @@
  * Replace console.log with an HTTP call once the sell endpoint is ready.
  */
 
-export type PaymentState =
-  | 'EN_ESPERA_DE_PAGO'
-  | 'PAGO_REALIZADO'
-  | 'CANCELADO'
-  | 'REEMBOLSADO';
+export type PaymentState = 'EN_ESPERA_DE_PAGO' | 'PAGO_REALIZADO' | 'CANCELADO' | 'REEMBOLSADO';
 
 export type OrderState =
   | 'PENDIENTE'
@@ -26,25 +22,16 @@ export type OrderState =
   | 'CANCELADO'
   | 'REEMBOLSADO';
 
-export type ShippingStatus =
-  | 'ORDER_PLACED'
-  | 'PROCESSING'
-  | 'SHIPPED'
-  | 'DELIVERED';
+export type ShippingStatus = 'ORDER_PLACED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED';
 
 export type PaymentMethod = 'TRANSFERENCIA';
 
 /** One product line inside the checkout payload. */
 export interface CheckoutProductLine {
-  /** Product ObjectId (from CartProductRef._id). */
+  /** Product ObjectId (from CartProductRef.id). */
   product: string;
-  size: string;
   subTotal: number;
   quantity: number;
-  /** Base64 logo image, or null if no logo was chosen. */
-  imgLogo?: string | null;
-  /** Custom instructions provided by the buyer for this product line. */
-  specialInstructions?: string;
   shipping_status: ShippingStatus;
   /** ISO date string — set to Date.now() at payload creation time. */
   shipping_status_updated_at: string;

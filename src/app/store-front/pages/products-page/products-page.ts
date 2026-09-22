@@ -1,180 +1,269 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   computed,
-  CUSTOM_ELEMENTS_SCHEMA,
-  HostListener,
   inject,
   signal,
 } from '@angular/core';
-import { ScrollStateService } from '../../../shared/services/scroll-state.service';
+import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
+import {
+  catchError,
+  EMPTY,
+  exhaustMap,
+  finalize,
+  map,
+  merge,
+  of,
+  shareReplay,
+  Subject,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { ProductService } from '../../../products/services/product.service';
 import { ProductImagePipe } from '../../../products/pipes/product-image.pipe';
-import { CurrencyPipe } from '@angular/common';
-import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
-import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
+  Brand,
+  Product,
   ProductCategory,
+  ProductFilters,
   PRODUCT_CATEGORY_OPTIONS,
+  ProductSubcategory,
   categoryLabel,
 } from '../../../products/interfaces/product.interface';
+import {
+  NotificationService,
+  apiErrorMessage,
+} from '../../../shared/services/notification.service';
+import { ScrollStateService } from '../../../shared/services/scroll-state.service';
 
-// Estado de filtros para el Subject. Refleja el contrato de filtrado del
-// backend (category / subcategory); el genero y las tallas del catalogo de ropa
-// anterior ya no forman parte de la navegacion.
-interface FiltersState {
-  category?: ProductCategory;
-  subcategory?: string;
-}
-
-const VALID_CATEGORIES = new Set<string>(PRODUCT_CATEGORY_OPTIONS.map((option) => option.value));
 @Component({
   selector: 'app-products-page',
-  imports: [ProductImagePipe, CurrencyPipe, RouterLink],
+  imports: [ProductImagePipe, CurrencyPipe, NgOptimizedImage, RouterLink],
   templateUrl: './products-page.html',
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  styleUrl: './products-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(window:scroll)': 'onWindowScroll()' },
 })
 export class ProductsPage implements AfterViewInit {
-  productService = inject(ProductService);
-  scrollStateService = inject(ScrollStateService);
-  route = inject(ActivatedRoute);
-
-  //!Filtros activos, derivados de los query params de la ruta
-  activeCategory = signal<ProductCategory | null>(null);
-  activeSubcategory = signal<string | null>(null);
-
-  /** Etiqueta legible de la categoria activa, para encabezados. */
-  activeCategoryLabel = computed(() => {
-    const category = this.activeCategory();
-    return category ? categoryLabel(category) : 'Todos los productos';
-  });
-
-  //!Filtros heredados del catalogo de ropa. El navbar ya no los usa, por lo que
-  //!las secciones de genero y categoria de la barra lateral quedan ocultas.
-  selectedGenders = signal<string[]>([]);
-  selectedCategories = signal<string[]>([]);
-  selectedSizes = signal<string[]>([]);
-  hideGenderFilters = signal<boolean>(true);
-  hideCategoryFilters = signal<boolean>(true);
-
-  /** Vestigio del catalogo de ropa; se conserva solo para la plantilla actual. */
-  isGorraCategory = signal<boolean>(false);
-
-  // Subject para cambios de filtros el cual incluira debounce
-  private filtersChanged$ = new Subject<FiltersState>();
-  private destroy$ = new Subject<void>();
+  private readonly productService = inject(ProductService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
+  private readonly scrollState = inject(ScrollStateService);
+  private readonly more = new Subject<void>();
+  private readonly retryFilters = new Subject<void>();
+  private readonly retryBrands = new Subject<void>();
+  readonly categories = PRODUCT_CATEGORY_OPTIONS;
+  readonly categoryLabel = categoryLabel;
+  readonly activeCategory = signal<ProductCategory | null>(null);
+  readonly activeSubcategory = signal<string | null>(null);
+  readonly activeBrand = signal<string | null>(null);
+  readonly products = signal<Product[]>([]);
+  readonly subcategories = signal<ProductSubcategory[]>([]);
+  readonly brands = signal<Brand[]>([]);
+  readonly productsLoading = signal(false);
+  readonly subcategoriesLoading = signal(false);
+  readonly brandsLoading = signal(false);
+  readonly productsError = signal<string | null>(null);
+  readonly subcategoriesError = signal<string | null>(null);
+  readonly brandsError = signal<string | null>(null);
+  readonly count = signal(0);
+  readonly hasMore = signal(true);
+  readonly filtersOpen = signal(false);
+  readonly hasFilters = computed(
+    () => !!(this.activeCategory() || this.activeSubcategory() || this.activeBrand()),
+  );
+  private offset = 0;
+  private readonly limit = 6;
 
   constructor() {
-    this.setupFiltersListener();
-    this.setupRouteListener();
-  }
-
-  private setupRouteListener() {
-    // La navegacion del navbar llega como query params: ?category=ROSTRO&subcategory=<id>
-    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const categoryParam = params.get('category') ?? '';
-      const subcategoryParam = params.get('subcategory') ?? '';
-
-      const category = VALID_CATEGORIES.has(categoryParam)
-        ? (categoryParam as ProductCategory)
-        : null;
-
-      this.activeCategory.set(category);
-      this.activeSubcategory.set(subcategoryParam || null);
-
-      this.productService.clearProductsCache();
-      this.productService.getProductsCache(this.getCurrentFiltersState());
-    });
-  }
-
-  //!Listener que reaccionara a los cambios de filtgros
-  private setupFiltersListener() {
-    this.filtersChanged$
+    merge(of(undefined), this.retryBrands)
       .pipe(
-        debounceTime(250),
-        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
-        takeUntil(this.destroy$),
+        tap(() => {
+          this.brandsLoading.set(true);
+          this.brandsError.set(null);
+        }),
+        switchMap(() =>
+          this.productService.getBrands().pipe(
+            tap((brands) => this.brands.set(brands)),
+            catchError((error: unknown) => {
+              this.brandsError.set(apiErrorMessage(error));
+              return EMPTY;
+            }),
+            finalize(() => this.brandsLoading.set(false)),
+          ),
+        ),
+        takeUntilDestroyed(),
       )
-      .subscribe((filters) => {
-        this.productService.clearProductsCache();
-        this.productService.getProductsCache(filters);
-      });
+      .subscribe();
+
+    merge(
+      this.route.queryParamMap,
+      this.retryFilters.pipe(map(() => this.route.snapshot.queryParamMap)),
+    )
+      .pipe(
+        switchMap((params) => {
+          const category =
+            this.categories.find((item) => item.value === params.get('category'))?.value ?? null;
+          const requestedSubcategory = category ? params.get('subcategory') || null : null;
+          this.activeCategory.set(category);
+          this.activeSubcategory.set(null);
+          this.activeBrand.set(params.get('brand') || null);
+          this.subcategories.set([]);
+          this.subcategoriesError.set(null);
+          this.products.set([]);
+          this.productsError.set(null);
+          this.count.set(0);
+          this.hasMore.set(true);
+          this.offset = 0;
+          this.subcategoriesLoading.set(!!category);
+          if (
+            (!category && (params.has('category') || params.has('subcategory'))) ||
+            params.get('brand') === ''
+          ) {
+            void this.router.navigate([], {
+              relativeTo: this.route,
+              queryParamsHandling: 'merge',
+              queryParams: {
+                category,
+                subcategory: requestedSubcategory,
+                brand: this.activeBrand(),
+              },
+              replaceUrl: true,
+            });
+            return EMPTY;
+          }
+          const subcategories = (
+            category ? this.productService.getSubcategoriesByCategory(category) : of([])
+          ).pipe(
+            tap((items) => this.subcategories.set(items)),
+            catchError((error: unknown) => {
+              const message = apiErrorMessage(error);
+              this.subcategoriesError.set(message);
+              this.notifications.error('No se pudieron cargar las subcategorías', message);
+              return of([] as ProductSubcategory[]);
+            }),
+            finalize(() => this.subcategoriesLoading.set(false)),
+            shareReplay({ bufferSize: 1, refCount: true }),
+          );
+          // Parent-category browsing need not wait for the optional filter request.
+          // A deep-linked subcategory must be validated before requesting products.
+          const validated = requestedSubcategory
+            ? subcategories.pipe(
+                map((items) => {
+                  const valid = items.some((item) => item.id === requestedSubcategory);
+                  this.activeSubcategory.set(valid ? requestedSubcategory : null);
+                  if (!valid) {
+                    void this.router.navigate([], {
+                      relativeTo: this.route,
+                      queryParamsHandling: 'merge',
+                      queryParams: { subcategory: null, page: null },
+                      replaceUrl: true,
+                    });
+                  }
+                  return valid;
+                }),
+              )
+            : of(true);
+          const listing = validated.pipe(
+            switchMap((valid) => {
+              if (!valid) return EMPTY;
+              const filters: ProductFilters = {
+                category: category ?? undefined,
+                subcategory: requestedSubcategory ?? undefined,
+                brand: this.activeBrand() ?? undefined,
+              };
+              return merge(of(undefined), this.more).pipe(
+                exhaustMap(() => {
+                  if (!this.hasMore()) return EMPTY;
+                  this.productsLoading.set(true);
+                  this.productsError.set(null);
+                  return this.productService
+                    .getProductsWithStock({ ...filters, limit: this.limit, offset: this.offset })
+                    .pipe(
+                      tap((response) => {
+                        this.products.update((current) => [...current, ...response.products]);
+                        this.count.set(response.count);
+                        this.offset += response.products.length;
+                        this.hasMore.set(
+                          response.products.length > 0 && this.offset < response.count,
+                        );
+                      }),
+                      catchError((error: unknown) => {
+                        const message = apiErrorMessage(error);
+                        this.productsError.set(message);
+                        this.notifications.error('No se pudieron cargar los productos', message);
+                        return EMPTY;
+                      }),
+                      finalize(() => this.productsLoading.set(false)),
+                    );
+                }),
+              );
+            }),
+          );
+          return merge(subcategories, listing);
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe();
   }
 
   ngAfterViewInit(): void {
-    const savedScroll = this.scrollStateService.trendingScrollState();
-    if (savedScroll > 0) {
-      window.scrollTo(0, savedScroll);
-    }
+    const saved = this.scrollState.trendingScrollState();
+    if (saved > 0) window.scrollTo(0, saved);
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  onWindowScroll(): void {
+    this.scrollState.trendingScrollState.set(window.scrollY);
+    if (
+      !this.productsError() &&
+      window.scrollY + window.innerHeight + 300 >= document.documentElement.scrollHeight
+    )
+      this.loadMore();
   }
 
-  @HostListener('window:scroll')
-  onWindowScroll() {
-    const scrollTop = window.scrollY;
-    const clientHeight = window.innerHeight;
-    const scrollHeight = document.documentElement.scrollHeight;
-
-    this.scrollStateService.trendingScrollState.set(scrollTop);
-
-    const isAtBottom = scrollTop + clientHeight + 300 >= scrollHeight;
-    if (isAtBottom) {
-      this.productService.getProductsCache(this.getCurrentFiltersState());
-    }
+  loadMore(): void {
+    this.more.next();
+  }
+  retrySubcategories(): void {
+    this.retryFilters.next();
+  }
+  reloadBrands(): void {
+    this.retryBrands.next();
   }
 
-  private getCurrentFiltersState(): FiltersState {
-    return {
-      category: this.activeCategory() ?? undefined,
-      subcategory: this.activeSubcategory() ?? undefined,
-    };
+  selectCategory(category: ProductCategory | null): void {
+    if (category === this.activeCategory() && !this.activeSubcategory()) return;
+    this.activeSubcategory.set(null);
+    this.subcategories.set([]);
+    this.changeFilters({ category, subcategory: null });
+  }
+  selectSubcategory(subcategory: string | null): void {
+    this.changeFilters({ subcategory });
+  }
+  selectBrand(brand: string): void {
+    this.changeFilters({ brand: brand || null });
+  }
+  clearFilters(): void {
+    this.changeFilters({ category: null, subcategory: null, brand: null });
   }
 
-  private emitFiltersChanged() {
-    this.filtersChanged$.next(this.getCurrentFiltersState());
-  }
-
-  onGenderChange(value: string, checked: boolean) {
-    this.selectedGenders.update((curr) => {
-      if (checked) {
-        // agregamos si no existe
-        if (curr.includes(value)) return curr;
-        return [...curr, value];
-      }
-
-      return curr.filter((v) => v !== value);
+  private changeFilters(queryParams: Params): void {
+    this.scrollState.trendingScrollState.set(0);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParamsHandling: 'merge',
+      queryParams: {
+        ...queryParams,
+        page: null,
+        offset: null,
+        gender: null,
+        sizes: null,
+        size: null,
+      },
     });
-
-    this.emitFiltersChanged();
-  }
-
-  onCategoryChange(value: string, checked: boolean) {
-    this.selectedCategories.update((curr) => {
-      if (checked) {
-        if (curr.includes(value)) return curr;
-        return [...curr, value];
-      }
-
-      return curr.filter((v) => v !== value);
-    });
-
-    this.emitFiltersChanged();
-  }
-
-  onSizeChange(value: string, checked: boolean) {
-    this.selectedSizes.update((curr) => {
-      if (checked) {
-        if (curr.includes(value)) return curr;
-        return [...curr, value];
-      } else {
-        return curr.filter((v) => v !== value);
-      }
-    });
-
-    this.emitFiltersChanged();
   }
 }

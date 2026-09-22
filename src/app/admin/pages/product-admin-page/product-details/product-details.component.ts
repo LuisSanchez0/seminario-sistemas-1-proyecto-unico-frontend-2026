@@ -9,11 +9,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import {
+  categoryLabel,
   Image,
   Product,
   ProductCategory,
@@ -42,6 +44,7 @@ interface PendingImage {
 @Component({
   selector: 'product-details',
   imports: [
+    CurrencyPipe,
     ReactiveFormsModule,
     RouterLink,
     ProductCarouselComponent,
@@ -115,7 +118,9 @@ export class ProductDetailsComponent implements OnInit {
   readonly subcategoriesResource = rxResource({
     params: () => ({ category: this.selectedCategory(), revision: this.subcategoriesRevision() }),
     stream: ({ params }) =>
-      params.category ? this.service.getSubcategoriesByCategory(params.category) : of([]),
+      params.category
+        ? this.service.getSubcategoriesByCategory(params.category, params.revision > 0)
+        : of([]),
   });
   readonly canSave = computed(() => {
     const value = this.formValue();
@@ -132,6 +137,49 @@ export class ProductDetailsComponent implements OnInit {
         ?.some((item) => item.id === value.subcategory && item.category === value.category)
     );
   });
+
+  readonly subcategories = computed(() =>
+    this.subcategoriesResource.hasValue() ? this.subcategoriesResource.value() : [],
+  );
+  readonly headerTitle = computed(() => {
+    const typed = this.formValue().title?.trim();
+    if (typed) return typed;
+    return this.productId() ? 'Producto sin nombre' : 'Nuevo producto';
+  });
+  readonly brandName = computed(
+    () => this.brands().find((brand) => brand.id === this.formValue().brand)?.name ?? '',
+  );
+  readonly subcategoryName = computed(
+    () => this.subcategories().find((item) => item.id === this.formValue().subcategory)?.name ?? '',
+  );
+  readonly categoryName = computed(() => {
+    const category = this.formValue().category;
+    return category ? categoryLabel(category) : '';
+  });
+  readonly price = computed(() => {
+    const value = this.formValue().price;
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  });
+  readonly stockCount = computed(() => {
+    const value = this.formValue().stock;
+    return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0;
+  });
+  readonly stockLevel = computed<'out' | 'low' | 'ok'>(() => {
+    const stock = this.stockCount();
+    return stock === 0 ? 'out' : stock <= 5 ? 'low' : 'ok';
+  });
+  readonly stockLabel = computed(() => {
+    const level = this.stockLevel();
+    return level === 'out' ? 'Sin stock' : level === 'low' ? 'Stock bajo' : 'En stock';
+  });
+  readonly stockHint = computed(() => {
+    const level = this.stockLevel();
+    if (level === 'out') return 'El producto se mostrará como agotado en la tienda.';
+    if (level === 'low') return 'Quedan pocas unidades disponibles.';
+    return 'Inventario suficiente para la venta.';
+  });
+  readonly productState = computed(() => this.product()?.state);
+  readonly imageCount = computed(() => this.imagesToCarousel().length);
 
   constructor() {
     this.destroyRef.onDestroy(() =>

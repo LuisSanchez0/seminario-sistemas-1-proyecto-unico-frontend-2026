@@ -3,11 +3,9 @@ import { StoreFrontLayoutComponent } from './layouts/store-front-layout/store-fr
 import { CheckoutLayoutComponent } from './layouts/checkout-layout/checkout-layout.component';
 import { HomePageComponent } from './pages/home-page/home-page.component';
 import { NotFoundPageComponent } from '../shared/components/not-found-page/not-found-page.component';
-import { ProductPageComponent } from './pages/product-page/product-page.component';
 import { AboutUsPageComponent } from './pages/about-us-page/about-us-page.component';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderPage } from './pages/order-page/order-page';
-import { ProductsPage } from './pages/products-page/products-page';
 import { CartPage } from './pages/cart-page/cart-page';
 import { CheckOutPageComponent } from './pages/check-out-page/check-out-page.component';
 import { checkoutCartGuard } from './guards/checkout-cart.guard';
@@ -41,7 +39,8 @@ export const storeFrontRoutes: Routes = [
         // Catalog listing. Filtering is driven by the `category` / `subcategory`
         // query params, matching the backend product filter contract.
         path: 'products',
-        component: ProductsPage,
+        loadComponent: () =>
+          import('./pages/products-page/products-page').then((m) => m.ProductsPage),
       },
       {
         // Legacy clothing URLs (/products/<gender>/<category>) now land on the
@@ -51,7 +50,8 @@ export const storeFrontRoutes: Routes = [
       },
       {
         path: 'product/:idSlug',
-        component: ProductPageComponent,
+        loadComponent: () =>
+          import('./pages/product-page/product-page.component').then((m) => m.ProductPageComponent),
       },
       {
         path: 'cart',

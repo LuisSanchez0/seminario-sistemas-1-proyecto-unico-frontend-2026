@@ -5,6 +5,7 @@ import { FormUtils } from '../../../utils/form-utils';
 @Component({
   selector: 'form-error-label',
   imports: [],
+  host: { class: 'block' },
   templateUrl: './form-error-label.component.html',
 })
 export class FormErrorLabelComponent {
@@ -15,9 +16,7 @@ export class FormErrorLabelComponent {
     const errors: ValidationErrors = this.control().errors || {};
 
     return this.control().touched && Object.keys(errors).length > 0
-      ?  this.name() + FormUtils.getTextError(errors)
+      ? this.name() + FormUtils.getTextError(errors)
       : null;
   }
-
-
 }

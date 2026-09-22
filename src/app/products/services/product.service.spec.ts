@@ -79,6 +79,29 @@ describe('ProductService cosmetics contract', () => {
     http.expectNone(`${url}/products?category=ROSTRO`);
   });
 
+  it('shares subcategory requests with navigation, supports refresh and cancels unused lookups', () => {
+    const first = service.getSubcategoriesByCategory('ROSTRO').subscribe();
+    const second = service.getSubcategoriesByCategory('ROSTRO').subscribe();
+    const request = http.expectOne(`${url}/subcategories/category/ROSTRO`);
+    first.unsubscribe();
+    expect(request.cancelled).toBe(false);
+    request.flush({ ok: true, subcategories: [product.subcategory] });
+    second.unsubscribe();
+    service.getSubcategoriesByCategory('ROSTRO').subscribe();
+    http.expectNone(`${url}/subcategories/category/ROSTRO`);
+    service.getSubcategoriesByCategory('ROSTRO', true).subscribe();
+    http.expectOne(`${url}/subcategories/category/ROSTRO`).flush({ ok: true, subcategories: [] });
+    expect(service.subcategoriesByCategory()['ROSTRO']).toEqual([]);
+    const cancelled = service.getSubcategoriesByCategory('LABIOS').subscribe();
+    const unused = http.expectOne(`${url}/subcategories/category/LABIOS`);
+    cancelled.unsubscribe();
+    expect(unused.cancelled).toBe(true);
+    service.getSubcategoriesByCategory('LABIOS').subscribe();
+    http.expectOne(`${url}/subcategories/category/LABIOS`).flush({ ok: true, subcategories: [] });
+    service.clearProductsCache();
+    expect(service.subcategoriesByCategory()).toEqual({});
+  });
+
   it('reads flattened create/update/detail responses and sends only editable fields', () => {
     const received: Product[] = [];
     service.createProduct(payload).subscribe((value) => received.push(value));

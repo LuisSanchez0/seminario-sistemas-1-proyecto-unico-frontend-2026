@@ -12,7 +12,7 @@ import {
 
 import { NgOptimizedImage } from '@angular/common';
 import Swiper from 'swiper';
-import { Navigation, Pagination } from 'swiper/modules';
+import { A11y, Keyboard, Navigation, Pagination } from 'swiper/modules';
 
 import { ProductImagePipe } from '../../pipes/product-image.pipe';
 
@@ -25,13 +25,14 @@ import { ProductImagePipe } from '../../pipes/product-image.pipe';
 })
 export class ProductCarouselComponent implements AfterViewInit, OnChanges, OnDestroy {
   images = input.required<string[]>();
+  productTitle = input('Producto');
   swiperDiv = viewChild.required<ElementRef>('swiperDiv');
 
   swiper: Swiper | undefined = undefined;
   private refreshTimer?: ReturnType<typeof setTimeout>;
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['images'].firstChange) {
+    if (!changes['images'] || changes['images'].firstChange) {
       return;
     }
 
@@ -70,7 +71,14 @@ export class ProductCarouselComponent implements AfterViewInit, OnChanges, OnDes
 
       loop: totalSlides > 1,
 
-      modules: [Navigation, Pagination],
+      modules: [A11y, Keyboard, Navigation, Pagination],
+      keyboard: { enabled: true, onlyInViewport: true },
+      a11y: {
+        prevSlideMessage: 'Imagen anterior',
+        nextSlideMessage: 'Imagen siguiente',
+        paginationBulletMessage: 'Ir a imagen {{index}}',
+        slideLabelMessage: 'Imagen {{index}} de {{slidesLength}}',
+      },
 
       slidesPerView: 1,
       slidesPerGroup: 1,
@@ -78,12 +86,13 @@ export class ProductCarouselComponent implements AfterViewInit, OnChanges, OnDes
       watchOverflow: true,
 
       pagination: {
-        el: '.swiper-pagination',
+        el: element.querySelector('.swiper-pagination'),
+        clickable: true,
       },
 
       navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
+        nextEl: element.querySelector('.swiper-button-next'),
+        prevEl: element.querySelector('.swiper-button-prev'),
       },
 
       scrollbar: {

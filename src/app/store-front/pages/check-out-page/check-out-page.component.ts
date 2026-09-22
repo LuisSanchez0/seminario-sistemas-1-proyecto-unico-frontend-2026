@@ -9,8 +9,8 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, concatMap, from, map, Observable, of, switchMap, finalize, throwError, toArray } from 'rxjs';
-import { CartItem, StoreFront } from '../../services/store-front';
+import { catchError, map, of, switchMap, finalize, throwError } from 'rxjs';
+import { StoreFront } from '../../services/store-front';
 import { AddressesService } from '../../services/addresses.service';
 import { NotificationService } from '../../../shared/services/notification.service';
 import {
@@ -19,37 +19,10 @@ import {
   UpdateAddressPayload,
 } from '../../interfaces/addresses.interface';
 import { ProductService } from '../../../products/services/product.service';
-import { SellService } from '../../../sell/services/sell.service';
-import {
-  CreateSellPayload,
-  LogoLocation,
-  Sell,
-  SendConfirmationEmailResponse,
-  SellItemSize,
-  UploadSellImageResponse,
-} from '../../../sell/interfaces/sell.interface';
+
 import { CheckoutAddressSelectorComponent } from './components/checkout-address-selector/checkout-address-selector.component';
 import { CheckoutPaymentCardComponent } from './components/checkout-payment-card/checkout-payment-card.component';
 import { CheckoutOrderSummaryComponent } from './components/checkout-order-summary/checkout-order-summary.component';
-import { SpecialInstructionsDialogComponent } from '../../components/special-instructions-dialog/special-instructions-dialog.component';
-
-// ── Logo location mapping (frontend slugs → backend enum) ─────────────────────
-// The logo-placement-selector uses Spanish slugs internally; the backend expects
-// English enum values. Unknown slugs fall back to 'NO_LOGO'.
-
-const LOGO_LOCATION_MAP: Readonly<Record<string, LogoLocation>> = {
-  'pecho-izquierdo': 'LEFT_CHEST',
-  'pecho-derecho':   'RIGHT_CHEST',
-  'hombro-derecho':  'RIGHT_SHOULDER',
-  'mangas':          'SLEEVES',
-  'espalda-superior':'UPPER_BACK',
-  'centro-gorra':    'CENTER_CAP',
-  'no-logo':         'NO_LOGO',
-};
-
-function toLogoLocation(value: string): LogoLocation {
-  return LOGO_LOCATION_MAP[value] ?? 'NO_LOGO';
-}
 
 // ── Local error discriminants ──────────────────────────────────────────────────
 
@@ -101,82 +74,52 @@ const NIT_RE = /^(CF|[0-9]+-?[0-9K])$/i;
 
 @Component({
   selector: 'app-check-out-page',
-  standalone: true,
   imports: [
     RouterLink,
     CheckoutAddressSelectorComponent,
     CheckoutPaymentCardComponent,
     CheckoutOrderSummaryComponent,
-    SpecialInstructionsDialogComponent,
   ],
   templateUrl: './check-out-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CheckOutPageComponent implements OnInit {
-  readonly cartStore        = inject(StoreFront);
-  private readonly addressService   = inject(AddressesService);
-  private readonly notifications    = inject(NotificationService);
-  private readonly sellService      = inject(SellService);
-  private readonly productService   = inject(ProductService);
-  private readonly router           = inject(Router);
-  private readonly destroyRef       = inject(DestroyRef);
+  readonly cartStore = inject(StoreFront);
+  private readonly addressService = inject(AddressesService);
+  private readonly notifications = inject(NotificationService);
+  private readonly productService = inject(ProductService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   // ── Address state ──────────────────────────────────────────────────────────
 
-  readonly addresses       = signal<Address[]>([]);
+  readonly addresses = signal<Address[]>([]);
   readonly selectedAddress = signal<Address | null>(null);
-  readonly isLoading       = signal<boolean>(false);
-  readonly isSaving        = signal<boolean>(false);
-  readonly error           = signal<string | null>(null);
+  readonly isLoading = signal<boolean>(false);
+  readonly isSaving = signal<boolean>(false);
+  readonly error = signal<string | null>(null);
 
   // ── Payment state ──────────────────────────────────────────────────────────
 
   readonly receiptImageBase64 = signal<string | null>(null);
-  readonly boletaFile         = signal<File | null>(null);
+  readonly boletaFile = signal<File | null>(null);
 
   // ── Checkout state ─────────────────────────────────────────────────────────
 
-  readonly isCreatingSell  = signal(false);
-  readonly checkoutError   = signal<string | null>(null);
+  readonly isCreatingSell = signal(false);
+  readonly checkoutError = signal<string | null>(null);
   readonly checkoutSuccess = signal(false);
 
   // ── Billing / NIT state ────────────────────────────────────────────────────
 
   readonly wantsInvoice = signal(false);
-  readonly nit          = signal('');
-
-  // ── Instructions dialog state ───────────────────────────────────────────────
-
-  readonly editingItem = signal<CartItem | null>(null);
-
-  onInstructionsEdit(item: CartItem): void {
-    this.editingItem.set(item);
-  }
-
-  onInstructionsSaved(newValue: string): void {
-    const item = this.editingItem();
-    if (!item) return;
-
-    this.cartStore.updateCartItem(
-      item.product._id,
-      item.size,
-      item.logoLocation,
-      { specialInstructions: newValue },
-      item.specialInstructions ?? ''
-    );
-
-    this.editingItem.set(null);
-  }
-
-  onInstructionsDialogClosed(): void {
-    this.editingItem.set(null);
-  }
+  readonly nit = signal('');
 
   // ── Derived totals ─────────────────────────────────────────────────────────
 
-  readonly subtotal     = computed(() => this.cartStore.cartTotal());
+  readonly subtotal = computed(() => this.cartStore.cartTotal());
   readonly shippingCost = computed(() => this.selectedAddress()?.shipping_cost ?? 0);
-  readonly orderTotal   = computed(() => this.subtotal() + this.shippingCost());
+  readonly orderTotal = computed(() => this.subtotal() + this.shippingCost());
 
   // ── NIT validation ─────────────────────────────────────────────────────────
 
@@ -185,9 +128,7 @@ export class CheckOutPageComponent implements OnInit {
     if (!this.wantsInvoice()) return null;
     const value = this.nit().trim();
     if (value === '') return null; // empty → fallback to CF, not an error
-    return NIT_RE.test(value)
-      ? null
-      : 'El NIT solo puede contener letras, números y guiones.';
+    return NIT_RE.test(value) ? null : 'El NIT solo puede contener letras, números y guiones.';
   });
 
   // ── Form validity ──────────────────────────────────────────────────────────
@@ -225,7 +166,10 @@ export class CheckOutPageComponent implements OnInit {
         next: (created) => {
           this.isSaving.set(false);
           this.loadAddresses(created._id);
-          this.notifications.success('Dirección guardada', 'La dirección fue agregada correctamente.');
+          this.notifications.success(
+            'Dirección guardada',
+            'La dirección fue agregada correctamente.',
+          );
         },
         error: () => {
           this.isSaving.set(false);
@@ -248,7 +192,10 @@ export class CheckOutPageComponent implements OnInit {
         },
         error: () => {
           this.isSaving.set(false);
-          this.notifications.error('Error', 'No se pudo actualizar la dirección. Intenta nuevamente.');
+          this.notifications.error(
+            'Error',
+            'No se pudo actualizar la dirección. Intenta nuevamente.',
+          );
         },
       });
   }
@@ -271,7 +218,10 @@ export class CheckOutPageComponent implements OnInit {
             const prev = this.addresses().find((a) => a._id === id) ?? null;
             this.selectedAddress.set(prev);
           }
-          this.notifications.error('Error', 'No se pudo eliminar la dirección. Intenta nuevamente.');
+          this.notifications.error(
+            'Error',
+            'No se pudo eliminar la dirección. Intenta nuevamente.',
+          );
         },
       });
   }
@@ -291,8 +241,8 @@ export class CheckOutPageComponent implements OnInit {
   }
 
   onPlaceOrder(): void {
-    const address    = this.selectedAddress();
-    const cartItems  = this.cartStore.cartItems();
+    const address = this.selectedAddress();
+    const cartItems = this.cartStore.cartItems();
     const boletaFile = this.boletaFile();
 
     if (!address) {
@@ -306,7 +256,10 @@ export class CheckOutPageComponent implements OnInit {
     }
 
     if (!boletaFile) {
-      this.notifications.error('Comprobante requerido', 'Sube el comprobante de pago antes de confirmar.');
+      this.notifications.error(
+        'Comprobante requerido',
+        'Sube el comprobante de pago antes de confirmar.',
+      );
       return;
     }
 
@@ -316,138 +269,91 @@ export class CheckOutPageComponent implements OnInit {
       return;
     }
 
-    const overLimitIndex = cartItems.findIndex(
-      (item) => (item.specialInstructions?.trim() ?? '').length > 500,
-    );
-    if (overLimitIndex !== -1) {
-      this.notifications.error(
-        'Instrucciones demasiado largas',
-        `Las instrucciones del artículo ${overLimitIndex + 1} superan los 500 caracteres permitidos.`,
-      );
+    if (this.isCreatingSell()) return;
+    if (
+      cartItems.some(
+        (item) =>
+          !Number.isInteger(item.quantity) ||
+          item.quantity < 1 ||
+          item.quantity > item.product.stock,
+      )
+    ) {
+      this.notifications.error('Stock insuficiente', 'Revisa las cantidades de tu carrito.');
       return;
     }
 
     this.isCreatingSell.set(true);
     this.checkoutError.set(null);
 
-    const payload: CreateSellPayload = {
-      total: this.orderTotal(),
-      products: cartItems.map((item) => ({
-        product: item.product._id,
-        size: item.size as SellItemSize,
-        quantity: item.quantity,
-        subTotal: item.product.price * item.quantity,
-        logoLocation: toLogoLocation(item.logoLocation),
-        specialInstructions: item.specialInstructions?.trim() ?? '',
-      })),
-      shippingAddress: address._id,
-      paymentMethod: 'TRANSFERENCIA',
-      ...(this.wantsInvoice() && { nit: this.nit().trim().toUpperCase() || 'CF' }),
-    };
+    
 
-    this.sellService
-      .createSell(payload)
-      .pipe(
-        switchMap((response) => {
-          const sell   = response.sell;
-          const sellId = sell.id;
+    // this.sellService
+    //   .createSell(payload)
+    //   .pipe(
+    //     switchMap((response) => {
+    //       const sell = response.sell;
+    //       const sellId = sell.id;
 
-          // Hard-stop: every cart item that has a logo MUST have a matching lineItemId.
-          // Index mismatch would silently skip a logo — we fail explicitly instead.
-          const missingLineItemIndex = cartItems.findIndex((item, i) => {
-            const p = sell.products[i];
-            return item.imgLogo != null && !(p?.id || p?._id);
-          });
-          if (missingLineItemIndex !== -1) {
-            return throwError((): UploadFailureError => ({
-              isSellCreated: true,
-              msg: `No se encontró el identificador de línea para el artículo ${missingLineItemIndex + 1}. No se pudieron subir los logos.`,
-            }));
-          }
-
-          const logoUploads = cartItems
-            .map((item, index): Observable<UploadSellImageResponse> | null => {
-              const logoBase64 = item.imgLogo;
-              const p = sell.products[index];
-              const lineItemId = p?.id || p?._id;
-
-              if (!logoBase64 || !lineItemId) return null;
-
-              const logoFile = this._base64ToFile(logoBase64, `logo-${index}.jpg`);
-              return this.sellService.uploadSellProductLogo(sellId, lineItemId, logoFile);
-            })
-            .filter((obs): obs is Observable<UploadSellImageResponse> => obs !== null);
-
-          // Boleta last; uploads run sequentially to avoid concurrent mutations on
-          // the same sell document.
-          const allUploads: Observable<UploadSellImageResponse>[] = [
-            ...logoUploads,
-            this.sellService.uploadSellBoleta(sellId, boletaFile),
-          ];
-
-          return from(allUploads).pipe(
-            concatMap((obs) => obs),
-            toArray(),
-            catchError((uploadErr) =>
-              throwError((): UploadFailureError => ({
-                isSellCreated: true,
-                msg: 'La venta fue creada, pero hubo un error subiendo las imágenes.',
-                originalError: uploadErr,
-              })),
-            ),
-            switchMap(() =>
-              this.sellService.sendConfirmationEmail(sellId).pipe(
-                catchError((emailErr) => {
-                  const backendMsg: string =
-                    (emailErr as SellCreationError)?.error?.msg ?? '';
-                  // Duplicate email → treat as success; the sell already has its email.
-                  if (isDuplicateEmailError(backendMsg)) {
-                    return of<SendConfirmationEmailResponse>({ ok: true, msg: backendMsg });
-                  }
-                  return throwError((): EmailFailureError => ({
-                    isEmailFailure: true,
-                    msg: 'La venta fue creada correctamente, pero no se pudo enviar el correo de confirmación.',
-                    originalError: emailErr,
-                  }));
-                }),
-              ),
-            ),
-            map((): Sell => sell),
-          );
-        }),
-        finalize(() => this.isCreatingSell.set(false)),
-        takeUntilDestroyed(this.destroyRef),
-      )
-      .subscribe({
-        next: (sell: Sell) => {
-          this.productService.clearProductsCache();
-          this.cartStore.clearCart();
-          this.checkoutSuccess.set(true);
-          const orderRef = sell.orderCode ?? sell.id;
-          this.notifications.success(
-            '¡Pedido registrado!',
-            `Tu pedido fue creado exitosamente. Código de orden: ${orderRef}`,
-          );
-          this.router.navigate(['/my-orders', sell.id]);
-        },
-        error: (err: unknown) => {
-          if (isEmailFailureError(err)) {
-            // Sell + uploads are OK; only the email step failed.
-            // Do NOT clear the cart — the sell exists and can be reprocessed.
-            this.checkoutError.set(err.msg);
-            this.notifications.error('Error al enviar correo', err.msg);
-          } else if (isUploadFailureError(err)) {
-            this.checkoutError.set(err.msg);
-            this.notifications.error('Error al subir imágenes', err.msg);
-          } else {
-            const msg =
-              (err as SellCreationError)?.error?.msg ??
-              'Ocurrió un error al procesar tu pedido. Intenta nuevamente.';
-            this.checkoutError.set(msg);
-            this.notifications.error('Error al procesar pedido', msg);
-          }
-        },
-      });
+    //       return this.sellService.uploadSellBoleta(sellId, boletaFile).pipe(
+    //         catchError((uploadErr) =>
+    //           throwError((): UploadFailureError => ({
+    //             isSellCreated: true,
+    //             msg: 'La venta fue creada, pero hubo un error subiendo las imágenes.',
+    //             originalError: uploadErr,
+    //           })),
+    //         ),
+    //         switchMap(() =>
+    //           this.sellService.sendConfirmationEmail(sellId).pipe(
+    //             catchError((emailErr) => {
+    //               const backendMsg: string = (emailErr as SellCreationError)?.error?.msg ?? '';
+    //               // Duplicate email → treat as success; the sell already has its email.
+    //               if (isDuplicateEmailError(backendMsg)) {
+    //                 return of<SendConfirmationEmailResponse>({ ok: true, msg: backendMsg });
+    //               }
+    //               return throwError((): EmailFailureError => ({
+    //                 isEmailFailure: true,
+    //                 msg: 'La venta fue creada correctamente, pero no se pudo enviar el correo de confirmación.',
+    //                 originalError: emailErr,
+    //               }));
+    //             }),
+    //           ),
+    //         ),
+    //         map((): Sell => sell),
+    //       );
+    //     }),
+    //     finalize(() => this.isCreatingSell.set(false)),
+    //     takeUntilDestroyed(this.destroyRef),
+    //   )
+    //   .subscribe({
+    //     next: (sell: Sell) => {
+    //       this.productService.clearProductsCache();
+    //       this.cartStore.clearCart();
+    //       this.checkoutSuccess.set(true);
+    //       const orderRef = sell.orderCode ?? sell.id;
+    //       this.notifications.success(
+    //         '¡Pedido registrado!',
+    //         `Tu pedido fue creado exitosamente. Código de orden: ${orderRef}`,
+    //       );
+    //       this.router.navigate(['/my-orders', sell.id]);
+    //     },
+    //     error: (err: unknown) => {
+    //       if (isEmailFailureError(err)) {
+    //         // Sell + uploads are OK; only the email step failed.
+    //         // Do NOT clear the cart — the sell exists and can be reprocessed.
+    //         this.checkoutError.set(err.msg);
+    //         this.notifications.error('Error al enviar correo', err.msg);
+    //       } else if (isUploadFailureError(err)) {
+    //         this.checkoutError.set(err.msg);
+    //         this.notifications.error('Error al subir imágenes', err.msg);
+    //       } else {
+    //         const msg =
+    //           (err as SellCreationError)?.error?.msg ??
+    //           'Ocurrió un error al procesar tu pedido. Intenta nuevamente.';
+    //         this.checkoutError.set(msg);
+    //         this.notifications.error('Error al procesar pedido', msg);
+    //       }
+    //     },
+    //   });
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
@@ -492,17 +398,5 @@ export class CheckOutPageComponent implements OnInit {
 
     const next = addresses.find((a) => a.is_default) ?? addresses[0] ?? null;
     this.selectedAddress.set(next);
-  }
-
-  private _base64ToFile(dataUrl: string, filename: string): File {
-    const [header, data] = dataUrl.split(',');
-    const mimeMatch = header.match(/:(.*?);/);
-    const mime = mimeMatch?.[1] ?? 'image/jpeg';
-    const binary = atob(data);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return new File([bytes], filename, { type: mime });
   }
 }

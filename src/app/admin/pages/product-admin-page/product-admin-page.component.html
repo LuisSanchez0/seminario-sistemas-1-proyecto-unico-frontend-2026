@@ -1,17 +1,76 @@
-<div data-theme="emerald" class="bg-base-200 text-base-content p-4 sm:p-6 rounded-2xl">
+<div>
   @if (productResource.isLoading()) {
-    <p role="status" class="p-8 text-center">
-      <span class="loading loading-spinner" aria-hidden="true"></span> Cargando producto…
-    </p>
+    <div class="mx-auto max-w-6xl space-y-6">
+      <h1 class="sr-only">Cargando producto</h1>
+      <p role="status" class="sr-only">Cargando producto…</p>
+      <div aria-hidden="true" class="space-y-6">
+        <div class="border-base-300 bg-base-100 rounded-2xl border p-5 shadow-sm sm:p-6">
+          <div class="skeleton h-4 w-48"></div>
+          <div class="skeleton mt-4 h-8 w-2/3"></div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <div class="skeleton h-6 w-20"></div>
+            <div class="skeleton h-6 w-24"></div>
+          </div>
+          <div
+            class="mt-6 grid gap-6 md:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] md:gap-8 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]"
+          >
+            <div class="skeleton aspect-square w-full rounded-2xl"></div>
+            <div class="grid gap-x-6 gap-y-5 sm:grid-cols-2 md:content-start">
+              @for (row of [1, 2, 3, 4]; track row) {
+                <div class="space-y-2">
+                  <div class="skeleton h-4 w-24"></div>
+                  <div class="skeleton h-7 w-32"></div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="skeleton h-64 w-full rounded-2xl"></div>
+        <div class="skeleton h-80 w-full rounded-2xl"></div>
+      </div>
+    </div>
   } @else if (productResource.error()) {
-    <div role="alert" class="alert alert-error">
-      {{ apiErrorMessage(productResource.error()) }}
-      <button type="button" class="btn" (click)="productResource.reload()">Reintentar</button>
-      <a routerLink="/admin/products" class="btn">Volver al catálogo</a>
+    <div
+      class="border-base-300 bg-base-100 mx-auto max-w-2xl space-y-5 rounded-2xl border p-6 text-center shadow-sm sm:p-8"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        aria-hidden="true"
+        class="mx-auto size-10"
+      >
+        <path
+          d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-2.994-1.5-3.86 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <h1 class="text-2xl font-bold">No se pudo cargar el producto</h1>
+      <div role="alert" class="alert alert-error text-left">
+        <span>{{ apiErrorMessage(productResource.error()) }}</span>
+      </div>
+      <div class="flex flex-wrap justify-center gap-3">
+        <button type="button" class="btn btn-primary" (click)="productResource.reload()">
+          Reintentar
+        </button>
+        <a routerLink="/admin/products" class="btn btn-ghost">Volver al catálogo</a>
+      </div>
     </div>
   } @else if (productResource.hasValue()) {
     @for (id of [productId()]; track id) {
       <product-details [product]="productResource.value()" />
     }
+  } @else {
+    <div
+      class="border-base-300 bg-base-100 mx-auto max-w-2xl space-y-4 rounded-2xl border p-6 text-center shadow-sm sm:p-8"
+    >
+      <h1 class="text-2xl font-bold">Producto no encontrado</h1>
+      <p class="text-base-content/80">
+        El producto que buscas no existe o ya fue eliminado del catálogo.
+      </p>
+      <a routerLink="/admin/products" class="btn btn-primary">Volver al catálogo</a>
+    </div>
   }
 </div>

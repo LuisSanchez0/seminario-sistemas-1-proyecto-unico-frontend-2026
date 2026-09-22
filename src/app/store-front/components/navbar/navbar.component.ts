@@ -58,10 +58,7 @@ export class NavbarComponent {
   /** Category expanded in the mobile accordion; `null` means all collapsed. */
   readonly expandedCategory = signal<ProductCategory | null>(null);
 
-  /** In-memory cache so a category is fetched at most once per page load. */
-  private readonly subcategoriesByCategory = signal<
-    Partial<Record<ProductCategory, ProductSubcategory[]>>
-  >({});
+  private readonly subcategoriesByCategory = this.productService.subcategoriesByCategory;
   private readonly loadingCategories = signal<readonly ProductCategory[]>([]);
   private readonly failedCategories = signal<readonly ProductCategory[]>([]);
   private readonly brokenImages = signal<readonly ProductCategory[]>([]);
@@ -130,8 +127,7 @@ export class NavbarComponent {
       .getSubcategoriesByCategory(category)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (subcategories) => {
-          this.subcategoriesByCategory.update((cache) => ({ ...cache, [category]: subcategories }));
+        next: () => {
           this.stopLoading(category);
         },
         // A failed lookup must never take the navbar down: parent categories stay

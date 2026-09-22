@@ -6,8 +6,10 @@
     @for (image of images(); track $index) {
       <div class="swiper-slide flex items-center justify-center">
         <img
-          [src]="image | productImage"
-          alt="Producto"
+          [ngSrc]="image | productImage"
+          width="600"
+          height="600"
+          [alt]="productTitle()"
           class="w-full max-h-[480px] object-contain aspect-square animate-fadeIn"
         />
       </div>
@@ -17,7 +19,7 @@
           [ngSrc]="null | productImage"
           width="600"
           height="600"
-          alt="Producto"
+          [alt]="productTitle()"
           loading="lazy"
           class="w-full max-h-[480px] object-contain aspect-square animate-fadeIn"
         />

@@ -1,19 +1,20 @@
 <div class="min-h-screen bg-gray-50 lg:bg-transparent">
-
   <!-- ── Desktop split background (fixed, behind all content) ─────────────── -->
-  <div aria-hidden="true" class="fixed inset-y-0 left-0 hidden w-1/2 bg-white shadow-[1px_0_0_0_rgba(0,0,0,0.05)] lg:block"></div>
+  <div
+    aria-hidden="true"
+    class="fixed inset-y-0 left-0 hidden w-1/2 bg-white shadow-[1px_0_0_0_rgba(0,0,0,0.05)] lg:block"
+  ></div>
   <div aria-hidden="true" class="fixed inset-y-0 right-0 hidden w-1/2 bg-gray-900 lg:block"></div>
 
   <!-- ── Checkout header ───────────────────────────────────────────────────── -->
   <header class="relative z-10 border-b border-gray-200 bg-white lg:border-0 lg:bg-transparent">
     <div class="mx-auto grid max-w-7xl grid-cols-2 items-center gap-x-8 px-4 py-4 sm:px-6 lg:px-8">
-
       <!-- Left: Logo -->
       <div>
         <a routerLink="/" aria-label="Ir al inicio">
           <img
-            src="https://prowear-s3-bucket.s3.us-east-1.amazonaws.com/static/images/ChatGPT+Image+23+abr+2026%2C+12_23_48+p.m..png"
-            alt="ProWear"
+            src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/lumina-beauty-logo.png"
+            alt="Lumina Beauty"
             class="h-20 w-auto"
           />
         </a>
@@ -25,13 +26,23 @@
           routerLink="/cart"
           class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900 lg:text-gray-400 lg:hover:text-gray-200"
         >
-          <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+            />
           </svg>
           Volver al carrito
         </a>
       </div>
-
     </div>
   </header>
 
@@ -47,23 +58,19 @@
       Form    → lg:col-start-1 lg:row-start-1
   -->
   <main class="relative z-10 mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-2 lg:px-8">
-
     <!-- ═══════════════════════════════════════════════════════════════════════
          RIGHT COLUMN — ORDER SUMMARY (dark background)
          Mobile: top / Desktop: right
     ════════════════════════════════════════════════════════════════════════ -->
     <section
       aria-labelledby="summary-heading"
-      class="bg-gray-900 px-4 pt-10 pb-12 text-gray-300 sm:px-6 md:px-10
-             lg:col-start-2 lg:row-start-1
-             lg:bg-transparent lg:px-0 lg:pl-12 lg:pt-16 lg:pb-24"
+      class="bg-gray-900 px-4 pt-10 pb-12 text-gray-300 sm:px-6 md:px-10 lg:col-start-2 lg:row-start-1 lg:bg-transparent lg:px-0 lg:pl-12 lg:pt-16 lg:pb-24"
     >
       <app-checkout-order-summary
         [items]="cartStore.cartItems()"
         [subtotal]="subtotal()"
         [shippingCost]="shippingCost()"
         [total]="orderTotal()"
-        (instructionsEdit)="onInstructionsEdit($event)"
       />
     </section>
 
@@ -73,32 +80,22 @@
     ════════════════════════════════════════════════════════════════════════ -->
     <section
       aria-labelledby="form-heading"
-      class="bg-white px-4 py-10 sm:px-6 md:px-10
-             lg:col-start-1 lg:row-start-1
-             lg:bg-transparent lg:px-0 lg:pr-12 lg:pt-16 lg:pb-24"
+      class="bg-white px-4 py-10 sm:px-6 md:px-10 lg:col-start-1 lg:row-start-1 lg:bg-transparent lg:px-0 lg:pr-12 lg:pt-16 lg:pb-24"
     >
-
       <!-- Step indicator -->
       <div class="mb-8">
         <p class="text-xs font-semibold uppercase tracking-widest text-indigo-600">
           Finalizar compra
         </p>
-        <h1
-          id="form-heading"
-          class="mt-1 text-2xl font-bold tracking-tight text-gray-900"
-        >
+        <h1 id="form-heading" class="mt-1 text-2xl font-bold tracking-tight text-gray-900">
           Completa tu pedido
         </h1>
       </div>
 
       <!-- ── Section 1: Shipping address ──────────────────────────────────── -->
       <div class="mb-10">
-        <h2 class="mb-1 text-base font-semibold text-gray-900">
-          Dirección de envío
-        </h2>
-        <p class="mb-4 text-sm text-gray-500">
-          Selecciona o agrega una dirección de entrega.
-        </p>
+        <h2 class="mb-1 text-base font-semibold text-gray-900">Dirección de envío</h2>
+        <p class="mb-4 text-sm text-gray-500">Selecciona o agrega una dirección de entrega.</p>
 
         @if (isLoading()) {
           <!-- Skeleton loader while addresses fetch -->
@@ -108,7 +105,9 @@
             }
           </div>
         } @else if (error()) {
-          <p class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-inset ring-red-200">
+          <p
+            class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-inset ring-red-200"
+          >
             {{ error() }}
           </p>
         } @else {
@@ -126,8 +125,17 @@
         <!-- Validation hint -->
         @if (!isLoading() && !selectedAddress() && addresses().length > 0) {
           <p class="mt-3 flex items-center gap-1.5 text-xs text-amber-600">
-            <svg class="h-3.5 w-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+            <svg
+              class="h-3.5 w-3.5 shrink-0"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                clip-rule="evenodd"
+              />
             </svg>
             Selecciona una dirección para continuar.
           </p>
@@ -139,9 +147,7 @@
 
       <!-- ── Section 2: Payment method ────────────────────────────────────── -->
       <div class="mb-10">
-        <h2 class="mb-1 text-base font-semibold text-gray-900">
-          Método de pago
-        </h2>
+        <h2 class="mb-1 text-base font-semibold text-gray-900">Método de pago</h2>
         <p class="mb-4 text-sm text-gray-500">
           Realiza una transferencia o depósito a la siguiente cuenta.
         </p>
@@ -157,9 +163,7 @@
 
       <!-- ── Section 3: Facturación / NIT ─────────────────────────────────── -->
       <div class="mb-10">
-        <h2 class="mb-1 text-base font-semibold text-gray-900">
-          Facturación
-        </h2>
+        <h2 class="mb-1 text-base font-semibold text-gray-900">Facturación</h2>
         <p class="mb-4 text-sm text-gray-500">
           Por defecto se emite la factura como Consumidor Final (CF).
         </p>
@@ -198,8 +202,17 @@
             />
             @if (nitError()) {
               <p class="mt-1.5 flex items-center gap-1 text-xs text-red-600">
-                <svg class="h-3.5 w-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" />
+                <svg
+                  class="h-3.5 w-3.5 shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                    clip-rule="evenodd"
+                  />
                 </svg>
                 {{ nitError() }}
               </p>
@@ -226,14 +239,36 @@
           @if (isCreatingSell()) {
             <!-- Spinner -->
             <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              ></path>
             </svg>
             Procesando pedido…
           } @else {
             <!-- Shopping bag icon -->
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"
+              />
             </svg>
             Confirmar pedido
           }
@@ -256,7 +291,9 @@
 
         <!-- Checkout error banner -->
         @if (checkoutError()) {
-          <p class="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-inset ring-red-200">
+          <p
+            class="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-inset ring-red-200"
+          >
             {{ checkoutError() }}
           </p>
         }
@@ -264,31 +301,39 @@
         <!-- Trust signals -->
         <div class="mt-6 flex items-center justify-center gap-4 text-xs text-gray-400">
           <span class="flex items-center gap-1">
-            <svg class="h-3.5 w-3.5 text-green-500" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-              <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
+            <svg
+              class="h-3.5 w-3.5 text-green-500"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
+                clip-rule="evenodd"
+              />
             </svg>
             Pago verificado manualmente
           </span>
           <span class="flex items-center gap-1">
-            <svg class="h-3.5 w-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            <svg
+              class="h-3.5 w-3.5 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+              />
             </svg>
             Envío confirmado
           </span>
         </div>
-
       </div>
-
     </section>
-
   </main>
-
-  <!-- ── Special instructions edit dialog ────────────────────────────────── -->
-  <app-special-instructions-dialog
-    [isOpen]="editingItem() !== null"
-    [initialValue]="editingItem()?.specialInstructions ?? ''"
-    (saved)="onInstructionsSaved($event)"
-    (closed)="onInstructionsDialogClosed()"
-  />
-
 </div>
