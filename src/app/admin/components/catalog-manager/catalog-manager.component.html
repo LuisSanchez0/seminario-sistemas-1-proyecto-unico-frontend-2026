@@ -1,0 +1,127 @@
+<dialog #dialog class="modal" [attr.aria-labelledby]="kind() + '-manager-title'">
+  <div class="modal-box w-11/12 max-w-2xl max-h-[85dvh] overflow-y-auto">
+    <div class="flex items-center justify-between gap-3 mb-5">
+      <h2 [id]="kind() + '-manager-title'" class="text-xl font-bold">
+        Administrar {{ kind() === 'brand' ? 'marcas' : 'subcategorías' }}
+      </h2>
+      <button type="button" class="btn btn-ghost" (click)="dialog.close()">Cerrar</button>
+    </div>
+    @if (kind() === 'subcategory') {
+      <label for="manager-category" class="block font-medium">Categoría</label>
+      <select
+        #categorySelect
+        id="manager-category"
+        class="select select-bordered w-full mb-4"
+        [value]="category()"
+        (change)="setCategory(categorySelect.value)"
+      >
+        @for (option of categoryOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    }
+    <label [for]="kind() + '-manager-search'" class="block font-medium"
+      >Buscar {{ kind() === 'brand' ? 'marcas' : 'subcategorías' }}</label
+    >
+    <input
+      #searchInput
+      [id]="kind() + '-manager-search'"
+      type="search"
+      class="input input-bordered w-full"
+      [value]="search()"
+      (input)="search.set(searchInput.value)"
+    />
+    <button type="button" class="btn btn-primary my-4" (click)="create()">
+      + Nueva {{ noun() }}
+    </button>
+    @if (loading()) {
+      <p role="status">Cargando catálogo…</p>
+    } @else if (error()) {
+      <div role="alert" class="alert alert-error">
+        {{ error() }} <button type="button" class="btn" (click)="load()">Reintentar</button>
+      </div>
+    } @else {
+      <ul class="divide-y divide-base-300">
+        @for (item of filtered(); track item.id) {
+          <li class="py-3 flex flex-wrap gap-2 items-center">
+            <span class="flex-1 min-w-32 break-words font-medium">{{ item.name }}</span>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              [attr.aria-label]="'Editar ' + item.name"
+              (click)="edit(item)"
+            >
+              Editar
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline border-error"
+              [disabled]="deleting()"
+              [attr.aria-label]="'Eliminar ' + item.name"
+              (click)="askDelete(item)"
+            >
+              Eliminar
+            </button>
+          </li>
+        } @empty {
+          <li class="py-5">No hay resultados. Puedes crear una {{ noun() }}.</li>
+        }
+      </ul>
+    }
+  </div>
+</dialog>
+<dialog
+  #editor
+  class="modal"
+  [attr.aria-labelledby]="kind() + '-editor-title'"
+  (cancel)="saving() ? $event.preventDefault() : null"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="modal-box max-h-[85dvh] overflow-y-auto">
+    <h2 [id]="kind() + '-editor-title'" class="text-xl font-bold mb-5">
+      {{ editing() ? 'Editar' : 'Nueva' }} {{ noun() }}
+    </h2>
+    @if (kind() === 'subcategory') {
+      <p class="mb-4">
+        Categoría: <strong>{{ categoryLabel(category()) }}</strong>
+      </p>
+    }
+    <fieldset [disabled]="saving()" class="space-y-3">
+      <label [for]="kind() + '-name'" class="block font-medium">Nombre</label>
+      <input
+        [id]="kind() + '-name'"
+        class="input input-bordered w-full"
+        formControlName="name"
+        (input)="suggestSlug()"
+        autofocus
+      />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <p class="text-base-content font-medium">Escribe un nombre.</p>
+      }
+      <label [for]="kind() + '-slug'" class="block font-medium">Slug</label>
+      <input [id]="kind() + '-slug'" class="input input-bordered w-full" formControlName="slug" />
+      @if (form.controls.slug.touched && form.controls.slug.invalid) {
+        <p class="text-base-content font-medium">
+          Usa al menos 3 caracteres: letras minúsculas, números y guiones.
+        </p>
+      }
+    </fieldset>
+    @if (editorError()) {
+      <p role="alert" class="alert alert-error mt-4">{{ editorError() }}</p>
+    }
+    <div class="modal-action flex-wrap">
+      <button type="button" class="btn" [disabled]="saving()" (click)="editor.close()">
+        Cancelar
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving() || form.invalid">
+        {{ saving() ? 'Guardando…' : editing() ? 'Guardar cambios' : 'Crear ' + noun() }}
+      </button>
+    </div>
+  </form>
+</dialog>
+<app-confirm-dialog
+  [title]="'Eliminar ' + noun()"
+  [message]="'¿Eliminar ' + (pendingDelete()?.name ?? '') + '?'"
+  [busy]="deleting()"
+  [error]="deleteError()"
+  (confirmed)="remove()"
+/>

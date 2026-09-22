@@ -1,0 +1,133 @@
+<div data-theme="emerald" class="bg-base-200 text-base-content p-4 sm:p-6 rounded-2xl space-y-6">
+  <header class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold">Catálogo de productos</h1>
+      <p class="mt-2">{{ response()?.count ?? 0 }} productos de belleza</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/admin/products/new">+ Nuevo producto</a>
+  </header>
+  <section
+    class="card bg-base-100 border border-base-300 p-5 space-y-4"
+    aria-label="Filtros del catálogo"
+  >
+    <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div>
+        <label for="filter-category" class="block font-medium mb-2">Categoría</label>
+        <select
+          #category
+          id="filter-category"
+          class="select select-bordered w-full"
+          [value]="filters().category ?? ''"
+          (change)="changeCategory(category.value)"
+        >
+          <option value="">Todas las categorías</option>
+          @for (option of categories; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label for="filter-subcategory" class="block font-medium mb-2">Subcategoría</label>
+        <select
+          #subcategory
+          id="filter-subcategory"
+          class="select select-bordered w-full"
+          [value]="filters().subcategory ?? ''"
+          [disabled]="
+            !selectedCategory() ||
+            subcategoriesResource.isLoading() ||
+            !!subcategoriesResource.error()
+          "
+          aria-describedby="subcategory-help"
+          (change)="setFilters({ subcategory: subcategory.value || null })"
+        >
+          <option value="">Todas las subcategorías</option>
+          @for (item of subcategories(); track item.id) {
+            <option [value]="item.id">{{ item.name }}</option>
+          }
+        </select>
+        <p id="subcategory-help" class="text-sm mt-2">
+          {{
+            !selectedCategory()
+              ? 'Selecciona primero una categoría.'
+              : subcategoriesResource.isLoading()
+                ? 'Cargando subcategorías…'
+                : 'Subcategorías de la categoría seleccionada.'
+          }}
+        </p>
+        @if (subcategoriesResource.error()) {
+          <p role="alert">
+            {{ apiErrorMessage(subcategoriesResource.error()) }}
+            <button type="button" class="btn btn-ghost" (click)="subcategoriesResource.reload()">
+              Reintentar
+            </button>
+          </p>
+        }
+      </div>
+      <div>
+        <app-brand-autocomplete
+          [brands]="brands()"
+          [value]="filters().brand ?? ''"
+          [allowCreate]="false"
+          [disabled]="brandsResource.isLoading()"
+          (selectionChange)="setFilters({ brand: $event || null })"
+        />
+        @if (brandsResource.isLoading()) {
+          <p role="status">Cargando marcas…</p>
+        }
+        @if (brandsResource.error()) {
+          <p role="alert">
+            {{ apiErrorMessage(brandsResource.error()) }}
+            <button type="button" class="btn btn-ghost" (click)="brandsResource.reload()">
+              Reintentar
+            </button>
+          </p>
+        }
+      </div>
+    </div>
+    <button type="button" class="btn btn-ghost self-start" (click)="clearFilters()">
+      Limpiar filtros
+    </button>
+  </section>
+  @if (productsResource.isLoading()) {
+    <p role="status" class="p-8 text-center">
+      <span class="loading loading-spinner" aria-hidden="true"></span> Cargando productos…
+    </p>
+  } @else if (productsResource.error()) {
+    <div role="alert" class="alert alert-error">
+      {{ apiErrorMessage(productsResource.error()) }}
+      <button type="button" class="btn" (click)="productsResource.reload()">Reintentar</button>
+    </div>
+  } @else {
+    <product-table
+      [products]="response()?.products ?? []"
+      [deleting]="deleting()"
+      (deleteRequested)="askDelete($event)"
+    />
+  }
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <app-pagination [pages]="response()?.pages ?? 0" [currentPage]="filters().page" />
+    <div class="flex items-center gap-3">
+      <label for="products-per-page">Productos por página</label>
+      <select
+        #perPage
+        id="products-per-page"
+        class="select select-bordered w-24"
+        [value]="filters().limit"
+        (change)="setFilters({ limit: +perPage.value })"
+      >
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+  </div>
+</div>
+<app-confirm-dialog
+  title="Eliminar producto"
+  [message]="'¿Eliminar ' + (pendingDelete()?.title ?? '') + ' del catálogo?'"
+  [busy]="deleting()"
+  [error]="deleteError()"
+  (confirmed)="deleteProduct()"
+/>

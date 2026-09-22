@@ -1,17 +1,34 @@
-<div class="join flex justify-center items-center">
+<nav class="flex flex-wrap gap-1" aria-label="Paginación">
+  @if (currentPage() > 1) {
+    <a
+      class="btn"
+      [routerLink]="[]"
+      [queryParams]="{ page: currentPage() - 1 }"
+      queryParamsHandling="merge"
+      aria-label="Página anterior"
+      >Anterior</a
+    >
+  }
   @for (page of getPagesList(); track page) {
-  <button
-    class="join-item btn"
-    [class.btn-primary]="page === activePage()"
-    [routerLink]="[]"
-    [queryParams]="{ page: page }"
-    (click)="activePage.set(page)"
-  >
-    {{ page }}
-  </button>
-
+    <a
+      class="btn"
+      [class.btn-primary]="page === currentPage()"
+      [attr.aria-current]="page === currentPage() ? 'page' : null"
+      [attr.aria-label]="'Página ' + page"
+      [routerLink]="[]"
+      [queryParams]="{ page: page }"
+      queryParamsHandling="merge"
+      >{{ page }}</a
+    >
   }
-  <!--  -->
-  @empty {
+  @if (currentPage() < pages()) {
+    <a
+      class="btn"
+      [routerLink]="[]"
+      [queryParams]="{ page: currentPage() + 1 }"
+      queryParamsHandling="merge"
+      aria-label="Página siguiente"
+      >Siguiente</a
+    >
   }
-</div>
+</nav>

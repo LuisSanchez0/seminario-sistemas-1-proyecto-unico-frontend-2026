@@ -1,0 +1,122 @@
+@if (products().length === 0) {
+  <div class="card border border-base-300 bg-base-100 p-8 text-center">
+    <h2 class="font-bold text-xl">No hay productos</h2>
+    <p class="mt-2">Prueba otros filtros o crea un nuevo producto.</p>
+  </div>
+} @else {
+  <div class="hidden xl:block rounded-box border border-base-300 bg-base-100">
+    <table class="table w-full table-fixed">
+      <caption class="sr-only">
+        Productos del catálogo de belleza
+      </caption>
+      <thead class="text-base-content">
+        <tr>
+          <th scope="col" class="w-1/4">Producto</th>
+          <th scope="col">Marca</th>
+          <th scope="col">Categoría</th>
+          <th scope="col">Subcategoría</th>
+          <th scope="col">Precio</th>
+          <th scope="col">Stock</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (product of products(); track product.id) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <img
+                  [ngSrc]="product.images | productImage"
+                  alt=""
+                  width="48"
+                  height="48"
+                  class="h-12 w-12 object-contain rounded-lg shrink-0"
+                /><a
+                  class="link font-semibold break-words min-w-0"
+                  [routerLink]="['/admin/products', product.id]"
+                  >{{ product.title }}</a
+                >
+              </div>
+            </td>
+            <td class="break-words">{{ product.brand.name }}</td>
+            <td>{{ categoryLabel(product.category) }}</td>
+            <td class="break-words">{{ product.subcategory.name }}</td>
+            <td>{{ product.price | currency: 'GTQ' : 'Q' : '1.2-2' }}</td>
+            <td>
+              <span
+                class="badge h-auto py-1"
+                [class.badge-warning]="product.stock === 0"
+                [class.badge-success]="product.stock > 0"
+                >{{ product.stock === 0 ? 'Sin stock' : 'En stock' }}</span
+              >
+              <p class="mt-1">{{ product.stock }} unidades</p>
+            </td>
+            <td>
+              <div class="flex flex-col gap-2">
+                <a
+                  class="btn btn-ghost"
+                  [routerLink]="['/admin/products', product.id]"
+                  [attr.aria-label]="'Editar ' + product.title"
+                  >Editar</a
+                ><button
+                  type="button"
+                  class="btn btn-ghost"
+                  [disabled]="deleting()"
+                  [attr.aria-label]="'Eliminar ' + product.title"
+                  (click)="deleteRequested.emit(product)"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2 xl:hidden">
+    @for (product of products(); track product.id) {
+      <article class="card bg-base-100 border border-base-300 p-5 min-w-0">
+        <div class="flex gap-4 items-center">
+          <img
+            [ngSrc]="product.images | productImage"
+            alt=""
+            width="64"
+            height="64"
+            class="w-16 h-16 object-contain rounded-lg shrink-0"
+          />
+          <div class="min-w-0">
+            <h2 class="font-bold break-words">{{ product.title }}</h2>
+            <p class="break-words">{{ product.brand.name }}</p>
+          </div>
+        </div>
+        <dl class="grid grid-cols-2 gap-3 mt-5 text-sm">
+          <dt>Categoría</dt>
+          <dd>{{ categoryLabel(product.category) }}</dd>
+          <dt>Subcategoría</dt>
+          <dd class="break-words">{{ product.subcategory.name }}</dd>
+          <dt>Precio</dt>
+          <dd class="font-bold">{{ product.price | currency: 'GTQ' : 'Q' : '1.2-2' }}</dd>
+          <dt>Stock</dt>
+          <dd>{{ product.stock === 0 ? 'Sin stock' : 'En stock: ' + product.stock }}</dd>
+        </dl>
+        <div class="flex flex-wrap gap-3 mt-5">
+          <a
+            class="btn btn-outline flex-1"
+            [routerLink]="['/admin/products', product.id]"
+            [attr.aria-label]="'Editar ' + product.title"
+            >Editar</a
+          ><button
+            type="button"
+            class="btn btn-ghost flex-1"
+            [disabled]="deleting()"
+            [attr.aria-label]="'Eliminar ' + product.title"
+            (click)="deleteRequested.emit(product)"
+          >
+            Eliminar
+          </button>
+        </div>
+      </article>
+    }
+  </div>
+}

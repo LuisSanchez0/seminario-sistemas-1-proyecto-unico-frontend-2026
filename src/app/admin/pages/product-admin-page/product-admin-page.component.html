@@ -1,0 +1,17 @@
+<div data-theme="emerald" class="bg-base-200 text-base-content p-4 sm:p-6 rounded-2xl">
+  @if (productResource.isLoading()) {
+    <p role="status" class="p-8 text-center">
+      <span class="loading loading-spinner" aria-hidden="true"></span> Cargando producto…
+    </p>
+  } @else if (productResource.error()) {
+    <div role="alert" class="alert alert-error">
+      {{ apiErrorMessage(productResource.error()) }}
+      <button type="button" class="btn" (click)="productResource.reload()">Reintentar</button>
+      <a routerLink="/admin/products" class="btn">Volver al catálogo</a>
+    </div>
+  } @else if (productResource.hasValue()) {
+    @for (id of [productId()]; track id) {
+      <product-details [product]="productResource.value()" />
+    }
+  }
+</div>

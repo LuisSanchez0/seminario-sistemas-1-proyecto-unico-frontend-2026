@@ -1,0 +1,37 @@
+<!-- Slider main container -->
+<div class="swiper w-full" #swiperDiv>
+  <!-- Additional required wrapper -->
+  <div class="swiper-wrapper">
+    <!-- Slides -->
+    @for (image of images(); track $index) {
+      <div class="swiper-slide flex items-center justify-center">
+        <img
+          [src]="image | productImage"
+          alt="Producto"
+          class="w-full max-h-[480px] object-contain aspect-square animate-fadeIn"
+        />
+      </div>
+    } @empty {
+      <div class="swiper-slide flex items-center justify-center">
+        <img
+          [ngSrc]="null | productImage"
+          width="600"
+          height="600"
+          alt="Producto"
+          loading="lazy"
+          class="w-full max-h-[480px] object-contain aspect-square animate-fadeIn"
+        />
+      </div>
+    }
+  </div>
+
+  <!-- If we need pagination -->
+  <div class="swiper-pagination"></div>
+
+  <!-- If we need navigation buttons -->
+  <button type="button" class="swiper-button-prev" aria-label="Imagen anterior"></button>
+  <button type="button" class="swiper-button-next" aria-label="Imagen siguiente"></button>
+
+  <!-- If we need scrollbar -->
+  <div class="swiper-scrollbar"></div>
+</div>

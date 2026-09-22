@@ -38,3 +38,18 @@ export class NotificationService {
     setTimeout(() => this.dismiss(id), duration);
   }
 }
+
+export function apiErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'error' in error) {
+    const body: unknown = error.error;
+    if (
+      typeof body === 'object' &&
+      body !== null &&
+      'msg' in body &&
+      typeof body.msg === 'string' &&
+      body.msg.trim()
+    )
+      return body.msg;
+  }
+  return 'Ocurrió un error inesperado.';
+}

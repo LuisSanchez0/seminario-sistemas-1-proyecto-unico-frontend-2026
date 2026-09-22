@@ -1,0 +1,278 @@
+<div class="max-w-6xl mx-auto space-y-6">
+  <header>
+    <a routerLink="/admin/products" class="link inline-block py-3">Volver al catálogo</a>
+    <h1 class="text-3xl font-bold">{{ productId() ? 'Editar producto' : 'Nuevo producto' }}</h1>
+    <p class="mt-2">Organiza tu catálogo de belleza, inventario e imágenes.</p>
+  </header>
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    <fieldset
+      [disabled]="busy()"
+      class="card bg-base-100 border border-base-300 p-5 sm:p-7 space-y-4"
+    >
+      <legend class="sr-only">Información básica</legend>
+      <h2 class="text-xl font-bold">Información básica</h2>
+      <label for="product-title" class="font-medium">Nombre</label>
+      <input
+        id="product-title"
+        class="input input-bordered w-full"
+        formControlName="title"
+        placeholder="Fit Me Matte + Poreless"
+        aria-describedby="title-error"
+      />
+      <form-error-label
+        id="title-error"
+        [control]="productForm.controls.title"
+        name="El nombre debe "
+      />
+      <label for="product-description" class="font-medium">Descripción</label>
+      <textarea
+        id="product-description"
+        class="textarea textarea-bordered w-full"
+        formControlName="description"
+        rows="4"
+        aria-describedby="description-error"
+      ></textarea>
+      <form-error-label
+        id="description-error"
+        [control]="productForm.controls.description"
+        name="La descripción debe "
+      />
+      <label for="product-slug" class="font-medium">Slug</label>
+      <input
+        id="product-slug"
+        class="input input-bordered w-full"
+        formControlName="slug"
+        aria-describedby="slug-error"
+      />
+      <form-error-label
+        id="slug-error"
+        [control]="productForm.controls.slug"
+        name="El slug debe "
+      />
+    </fieldset>
+
+    <fieldset
+      [disabled]="busy()"
+      class="card bg-base-100 border border-base-300 p-5 sm:p-7 space-y-6"
+    >
+      <legend class="sr-only">Clasificación</legend>
+      <h2 class="text-xl font-bold">Clasificación</h2>
+      <fieldset>
+        <legend class="font-medium mb-3">Categoría</legend>
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+          @for (option of categoryOptions; track option.value) {
+            <label
+              class="flex items-center gap-3 rounded-xl border border-base-300 p-3 min-h-14 cursor-pointer hover:bg-base-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:checked]:border-primary has-[:checked]:bg-base-200"
+            >
+              <input
+                type="radio"
+                class="radio radio-primary shrink-0"
+                formControlName="category"
+                [value]="option.value"
+              />
+              <span>{{ option.label }}</span>
+            </label>
+          }
+        </div>
+      </fieldset>
+      <section aria-labelledby="subcategory-label">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h3 id="subcategory-label" class="font-medium">Subcategoría</h3>
+          <button
+            type="button"
+            class="btn btn-ghost"
+            (click)="subcategoryManager.open(selectedCategory())"
+          >
+            Administrar subcategorías
+          </button>
+        </div>
+        @if (!selectedCategory()) {
+          <p>Selecciona primero una categoría.</p>
+        } @else if (subcategoriesResource.isLoading()) {
+          <p role="status">Cargando subcategorías…</p>
+        } @else if (subcategoriesResource.error()) {
+          <p role="alert" class="alert alert-error">
+            {{ apiErrorMessage(subcategoriesResource.error()) }}
+            <button type="button" class="btn" (click)="subcategoriesResource.reload()">
+              Reintentar
+            </button>
+          </p>
+        } @else {
+          <div class="flex flex-wrap gap-3">
+            @for (item of subcategoriesResource.value(); track item.id) {
+              <button
+                type="button"
+                class="btn min-h-12 h-auto py-3 whitespace-normal"
+                [class.btn-primary]="formValue().subcategory === item.id"
+                [attr.aria-pressed]="formValue().subcategory === item.id"
+                (click)="chooseSubcategory(item.id)"
+              >
+                @if (formValue().subcategory === item.id) {
+                  <span aria-hidden="true">✓</span>
+                }
+                {{ item.name }}
+              </button>
+            } @empty {
+              <p class="w-full">No hay subcategorías en esta categoría. Crea la primera.</p>
+            }
+            <button
+              type="button"
+              class="btn btn-outline border-dashed min-h-12"
+              (click)="subcategoryManager.create('', selectedCategory())"
+            >
+              + Nueva subcategoría
+            </button>
+          </div>
+        }
+        <form-error-label
+          [control]="productForm.controls.subcategory"
+          name="El campo subcategoría debe "
+        />
+      </section>
+      <section>
+        <app-brand-autocomplete
+          [brands]="brands()"
+          [value]="formValue().brand ?? ''"
+          [disabled]="busy() || brandsResource.isLoading()"
+          (selectionChange)="chooseBrand($event)"
+          (createRequested)="brandManager.create($event)"
+        />
+        <form-error-label [control]="productForm.controls.brand" name="El campo marca debe " />
+        @if (brandsResource.isLoading()) {
+          <p role="status">Cargando marcas…</p>
+        }
+        @if (brandsResource.error()) {
+          <p role="alert" class="alert alert-error">
+            {{ apiErrorMessage(brandsResource.error()) }}
+            <button type="button" class="btn" (click)="brandsResource.reload()">Reintentar</button>
+          </p>
+        }
+        <button type="button" class="btn btn-ghost mt-2" (click)="brandManager.open()">
+          Administrar marcas
+        </button>
+      </section>
+    </fieldset>
+
+    <fieldset [disabled]="busy()" class="card bg-base-100 border border-base-300 p-5 sm:p-7">
+      <legend class="sr-only">Precio e inventario</legend>
+      <h2 class="text-xl font-bold mb-5">Precio e inventario</h2>
+      <div class="grid sm:grid-cols-2 gap-5">
+        <div>
+          <label for="product-price" class="block font-medium mb-2">Precio (Q)</label>
+          <input
+            id="product-price"
+            type="number"
+            min="0"
+            step="0.01"
+            class="input input-bordered w-full"
+            formControlName="price"
+            aria-describedby="price-error"
+          />
+          <form-error-label
+            id="price-error"
+            [control]="productForm.controls.price"
+            name="El precio debe "
+          />
+        </div>
+        <div>
+          <label for="product-stock" class="block font-medium mb-2">Stock disponible</label>
+          <input
+            id="product-stock"
+            type="number"
+            min="0"
+            class="input input-bordered w-full"
+            formControlName="stock"
+            aria-describedby="stock-error"
+          />
+          <form-error-label
+            id="stock-error"
+            [control]="productForm.controls.stock"
+            name="El stock debe "
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <section
+      class="card bg-base-100 border border-base-300 p-5 sm:p-7 space-y-4"
+      aria-labelledby="images-title"
+    >
+      <h2 id="images-title" class="text-xl font-bold">Imágenes</h2>
+      <div class="min-w-0 max-w-lg mx-auto w-full">
+        <product-carousel [images]="imagesToCarousel()" />
+      </div>
+      <label for="product-images" class="font-medium">Añadir imágenes</label>
+      <input
+        id="product-images"
+        type="file"
+        class="file-input file-input-bordered w-full"
+        multiple
+        accept="image/*"
+        [disabled]="busy()"
+        (change)="onFilesChanged($event)"
+      />
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        @for (image of currentImages(); track image.key; let index = $index) {
+          <div class="rounded-xl border border-base-300 p-2">
+            <img
+              [src]="image.url"
+              [alt]="'Imagen ' + (index + 1) + ' del producto'"
+              class="w-full aspect-square object-contain rounded-lg"
+            />
+            <button
+              type="button"
+              class="btn btn-ghost w-full mt-2"
+              [disabled]="busy()"
+              [attr.aria-label]="'Eliminar imagen ' + (index + 1)"
+              (click)="askDeleteImage(image)"
+            >
+              Eliminar
+            </button>
+          </div>
+        }
+        @for (image of pendingImages(); track image.url; let index = $index) {
+          <div class="rounded-xl border border-dashed border-base-300 p-2">
+            <img
+              [src]="image.url"
+              [alt]="'Vista previa ' + (index + 1)"
+              class="w-full aspect-square object-contain rounded-lg"
+            />
+            <p class="text-sm text-center">Pendiente de guardar</p>
+            <button
+              type="button"
+              class="btn btn-ghost w-full"
+              [disabled]="busy()"
+              [attr.aria-label]="'Quitar imagen pendiente ' + (index + 1)"
+              (click)="removePending(image)"
+            >
+              Quitar
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+    @if (saveError()) {
+      <p role="alert" class="alert alert-error">{{ saveError() }}</p>
+    }
+    <div class="flex flex-wrap justify-end gap-3 pb-6">
+      <button type="button" class="btn" routerLink="/admin/products" [disabled]="busy()">
+        Cancelar
+      </button>
+      <button type="submit" class="btn btn-primary min-w-40" [disabled]="!canSave()">
+        @if (saving() || uploading()) {
+          <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+        }
+        {{ uploading() ? 'Subiendo imágenes…' : saving() ? 'Guardando…' : 'Guardar producto' }}
+      </button>
+    </div>
+  </form>
+</div>
+<app-catalog-manager #brandManager kind="brand" (changed)="catalogChanged($event)" />
+<app-catalog-manager #subcategoryManager kind="subcategory" (changed)="catalogChanged($event)" />
+<app-confirm-dialog
+  title="Eliminar imagen"
+  message="¿Eliminar esta imagen del producto?"
+  [busy]="deletingImage()"
+  [error]="imageError()"
+  (confirmed)="deleteImage()"
+/>

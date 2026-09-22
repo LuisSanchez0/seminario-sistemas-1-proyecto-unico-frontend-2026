@@ -1,10 +1,5 @@
 import { inject } from '@angular/core';
-import {
-  AbstractControl,
-  FormArray,
-  FormGroup,
-  ValidationErrors,
-} from '@angular/forms';
+import { AbstractControl, FormArray, FormGroup, ValidationErrors } from '@angular/forms';
 import { AuthService } from '../auth/services/auth.service';
 import { firstValueFrom } from 'rxjs';
 
@@ -21,10 +16,19 @@ export class FormUtils {
     this._authService = authService;
   }
 
+  static slugify(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
   // Expresiones regulares
   static namePattern = '([a-zA-Z]+) ([a-zA-Z]+)';
   static emailPattern = '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$';
-  static codePattern = '^[0-9]{8}$'
+  static codePattern = '^[0-9]{8}$';
   static notOnlySpacesPattern = '^[a-zA-Z0-9]+$';
   static slugPattern = '^[a-z0-9_]+(?:-[a-z0-9_]+)*$';
 
@@ -72,9 +76,7 @@ export class FormUtils {
   }
 
   static isValidField(form: FormGroup, fieldName: string): boolean | null {
-    return (
-      !!form.controls[fieldName].errors && form.controls[fieldName].touched
-    );
+    return !!form.controls[fieldName].errors && form.controls[fieldName].touched;
   }
 
   static getFieldError(form: FormGroup, fieldName: string): string | null {
@@ -82,19 +84,14 @@ export class FormUtils {
 
     const errors = form.controls[fieldName].errors ?? {};
 
-    return `En el campo: ${fieldName }, debe de ${FormUtils.getTextError(errors)}`;
+    return `En el campo: ${fieldName}, debe de ${FormUtils.getTextError(errors)}`;
   }
 
   static isValidFieldInArray(formArray: FormArray, index: number) {
-    return (
-      formArray.controls[index].errors && formArray.controls[index].touched
-    );
+    return formArray.controls[index].errors && formArray.controls[index].touched;
   }
 
-  static getFieldErrorInArray(
-    formArray: FormArray,
-    index: number
-  ): string | null {
+  static getFieldErrorInArray(formArray: FormArray, index: number): string | null {
     if (formArray.controls.length === 0) return null;
 
     const errors = formArray.controls[index].errors ?? {};
@@ -118,7 +115,7 @@ export class FormUtils {
       try {
         const emailExists = await firstValueFrom(this._authService.validateEmail(formValue));
 
-        if ( !emailExists ) {
+        if (!emailExists) {
           return { emailTaken: true };
         }
       } catch (error) {

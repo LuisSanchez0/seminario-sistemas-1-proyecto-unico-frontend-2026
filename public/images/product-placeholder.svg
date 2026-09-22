@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" fill="none">
+  <title>Producto de belleza sin imagen</title>
+  <g stroke="#48535a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="166" y="206" width="112" height="206" rx="24"/>
+    <path d="M190 206v-44h64v44m-50-44v-30h54m-36 0v30"/>
+    <rect x="186" y="270" width="72" height="72" rx="8"/>
+    <path d="M310 310h132v82a20 20 0 0 1-20 20h-92a20 20 0 0 1-20-20v-82Z"/>
+    <rect x="304" y="282" width="144" height="28" rx="8"/>
+    <path d="M360 355h32m-4-171v40m-20-20h40"/>
+  </g>
+</svg>

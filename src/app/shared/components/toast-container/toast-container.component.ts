@@ -3,7 +3,6 @@ import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-toast-container',
-  standalone: true,
   templateUrl: './toast-container.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
