@@ -1,0 +1,42 @@
+<div class="mt-16 flex flex-col items-center justify-center py-20 text-center">
+
+  <!-- Shopping bag illustration -->
+  <svg
+    class="h-28 w-28 text-gray-200"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1"
+    aria-hidden="true"
+  >
+    <path
+      d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+
+  <h2 class="mt-6 text-xl font-semibold text-gray-900">
+    Tu carrito está vacío
+  </h2>
+  <p class="mt-2 max-w-xs text-sm text-gray-500">
+    Parece que todavía no has agregado ningún artículo. Explora nuestro catálogo y personaliza tu ropa.
+  </p>
+
+  <a
+    routerLink="/products/all/all"
+    class="mt-8 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+  >
+    Explorar productos
+    <svg
+      class="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+    </svg>
+  </a>
+</div>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" role="img">
+  <title>Tratamientos</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F1ECF8"/>
+      <stop offset="1" stop-color="#C0AEDD"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#g)"/>
+  <g fill="none" stroke="#8672B4" stroke-opacity=".45" stroke-width="10" stroke-linecap="round">
+    <circle cx="300" cy="286" r="118"/>
+    <path d="M182 286a118 118 0 0 0 236 0"/>
+    <path d="M232 452h136"/>
+  </g>
+  <circle cx="300" cy="286" r="34" fill="#8672B4" fill-opacity=".28"/>
+</svg>

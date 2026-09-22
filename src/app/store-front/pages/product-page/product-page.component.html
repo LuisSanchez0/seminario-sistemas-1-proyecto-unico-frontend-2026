@@ -1,0 +1,471 @@
+<div class="bg-white">
+  <div
+    class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8"
+  >
+    <div class="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">
+
+      <!-- ── Product images ─────────────────────────────────────────────── -->
+      @if (product()?.images?.length) {
+        <div class="sm:hidden mb-6">
+          <product-carousel
+            [images]="$any(product()?.images ?? [])"
+          ></product-carousel>
+        </div>
+
+        <el-tab-group class="hidden sm:flex flex-col-reverse">
+          <div class="mx-auto mt-6 w-full max-w-2xl lg:max-w-none">
+            <el-tab-list class="grid grid-cols-4 gap-6">
+              @for (image of product()?.images ?? []; track $index) {
+                <button
+                  class="relative flex h-24 cursor-pointer items-center justify-center rounded-md bg-white text-sm font-medium text-gray-900 uppercase hover:bg-gray-50 focus:ring-3 focus:ring-indigo-500/50 focus:ring-offset-4 focus:outline-hidden"
+                >
+                  <span class="sr-only">Vista {{ $index + 1 }}</span>
+                  <span class="absolute inset-0 overflow-hidden rounded-md">
+                    <img
+                      [src]="image | productImage"
+                      [alt]="(product()?.title || 'Imagen de producto') + ' - vista ' + ($index + 1)"
+                      width="800"
+                      height="800"
+                      class="size-full object-contain"
+                    />
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    class="pointer-events-none absolute inset-0 rounded-md ring-2 ring-transparent ring-offset-2 in-aria-selected:ring-indigo-500"
+                  ></span>
+                </button>
+              }
+            </el-tab-list>
+          </div>
+
+          <el-tab-panels>
+            @for (image of product()?.images ?? []; track $index) {
+              <div [attr.hidden]="$index === 0 ? null : ''">
+                <img
+                  [src]="image | productImage"
+                  [alt]="(product()?.title || 'Imagen de producto') + ' - vista ' + ($index + 1)"
+                  width="800"
+                  height="800"
+                  class="aspect-square w-full object-contain sm:rounded-lg"
+                />
+              </div>
+            }
+          </el-tab-panels>
+        </el-tab-group>
+      } @else {
+        <div
+          class="aspect-square w-full rounded-lg bg-gray-100 flex items-center justify-center"
+        >
+          <img
+            [src]="product()?.images | productImage"
+            [alt]="product()?.title || 'Imagen no disponible'"
+            width="800"
+            height="800"
+            class="h-full w-full object-contain rounded-lg"
+          />
+        </div>
+      }
+
+      <!-- ── Product info & form ─────────────────────────────────────────── -->
+      <div class="mt-10 px-4 sm:mt-16 sm:px-0 lg:mt-0">
+
+        <!-- Title & price -->
+        <div class="flex items-center justify-between gap-4">
+          <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+            {{ product()?.title }}
+          </h1>
+          <p class="text-2xl font-semibold tracking-tight text-gray-900">
+            {{ product()?.price | currency : "GTQ" : "symbol" : "1.2-2" : "es-GT" }}
+          </p>
+        </div>
+
+        <form class="mt-6 space-y-8" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+          <!-- ── Size selector ─────────────────────────────────────────── -->
+          <div>
+            <h2 class="text-sm font-medium text-gray-900">Talla</h2>
+            <fieldset
+              aria-label="Elige una talla"
+              class="mt-2"
+              [class.opacity-50]="!hasSizes()"
+              [class.pointer-events-none]="!hasSizes()"
+            >
+              <div class="flex flex-wrap gap-3">
+                @for (item of displayedSizes(); track item.size) {
+                  <label
+                    class="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 min-w-[3rem] has-checked:border-indigo-600 has-checked:bg-indigo-600 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-indigo-600 transition-all"
+                    [class.pointer-events-none]="!hasSizes() || item.stock <= 0"
+                    [class.opacity-50]="!hasSizes() || item.stock <= 0"
+                    [class.cursor-not-allowed]="!hasSizes() || item.stock <= 0"
+                  >
+                    <input
+                      type="radio"
+                      formControlName="size"
+                      [value]="item.size"
+                      class="absolute inset-0 appearance-none focus:outline-none"
+                    />
+                    <span
+                      class="text-sm font-medium uppercase whitespace-nowrap group-has-checked:text-white"
+                    >
+                      @if (isGorra()) {
+                        Talla única
+                      } @else {
+                        {{ item.size }}
+                      }
+                    </span>
+                  </label>
+                }
+              </div>
+
+              @if (!hasSizes()) {
+                <p class="mt-2 text-xs text-gray-500">
+                  Este producto no tiene tallas disponibles.
+                </p>
+              }
+            </fieldset>
+          </div>
+
+          <!-- ── Quantity ──────────────────────────────────────────────── -->
+          <div>
+            <label
+              for="quantity"
+              class="block text-sm font-medium text-gray-900"
+            >
+              Cantidad
+            </label>
+            <div class="mt-2 max-w-40">
+              <input
+                id="quantity"
+                type="number"
+                min="1"
+                [attr.max]="hasSizes() ? remainingStock() : null"
+                formControlName="quantity"
+                class="block w-full rounded-md border px-3 py-2 text-sm text-gray-900 shadow-sm focus:outline-none focus:ring-1 transition-colors"
+                [ngClass]="(form.get('quantity')?.invalid && form.get('quantity')?.touched)
+                  ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-indigo-500 focus:ring-indigo-500'"
+              />
+
+              @if (hasSizes() && selectedSize() && !(form.get('quantity')?.invalid && form.get('quantity')?.touched)) {
+                <p class="mt-1 text-xs text-gray-500">
+                  Máximo disponible: {{ remainingStock() }}
+                </p>
+              }
+
+              @if (form.get('quantity')?.invalid && form.get('quantity')?.touched) {
+                <p class="mt-1.5 flex items-center gap-1 text-xs text-red-600">
+                  <svg
+                    class="h-3.5 w-3.5 shrink-0"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  @if (form.get('quantity')?.errors?.['max']) {
+                    La cantidad supera el stock disponible para esta talla (máx. {{ remainingStock() }}).
+                  } @else if (form.get('quantity')?.errors?.['min']) {
+                    La cantidad mínima es 1.
+                  } @else {
+                    Ingresa una cantidad válida.
+                  }
+                </p>
+              }
+            </div>
+          </div>
+
+          <!-- ── Logo placement selector ──────────────────────────────── -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h2 class="text-sm font-medium text-gray-900">
+                  Ubicación del logo
+                </h2>
+                <p class="mt-0.5 text-xs text-gray-500">
+                  @if (isGorra()) {
+                    Selecciona si deseas logo bordado en el centro de la gorra
+                  } @else {
+                    Selecciona dónde quieres colocar tu logo en la prenda
+                  }
+                </p>
+              </div>
+            </div>
+
+            <app-logo-placement-selector
+              formControlName="logoLocation"
+              [options]="gorraLogoOptions()"
+            ></app-logo-placement-selector>
+          </div>
+
+          <!-- ── Gorra cap SVG preview ──────────────────────────────────── -->
+          @if (isGorra()) {
+            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm p-4">
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                Vista previa del bordado
+              </p>
+
+              <div class="flex justify-center">
+                <svg
+                  viewBox="0 0 200 130"
+                  class="w-56 max-w-full"
+                  aria-label="Vista previa de la gorra"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <defs>
+                    <clipPath id="cap-logo-clip">
+                      <rect x="70" y="42" width="60" height="40" rx="5" />
+                    </clipPath>
+                  </defs>
+
+                  <!-- Cap crown -->
+                  <path
+                    d="M 22,98 Q 22,12 100,10 Q 178,12 178,98 Z"
+                    fill="#f3f4f6"
+                    stroke="#9ca3af"
+                    stroke-width="2"
+                    stroke-linejoin="round"
+                  />
+
+                  <!-- Center seam (subtle) -->
+                  <line
+                    x1="100" y1="10" x2="100" y2="98"
+                    stroke="#e5e7eb"
+                    stroke-width="1"
+                  />
+
+                  <!-- Sweatband crease -->
+                  <path
+                    d="M 22,98 Q 100,104 178,98"
+                    fill="none"
+                    stroke="#d1d5db"
+                    stroke-width="1.2"
+                  />
+
+                  <!-- Brim -->
+                  <path
+                    d="M 8,98 Q 100,118 192,98 L 190,109 Q 100,130 10,109 Z"
+                    fill="#e5e7eb"
+                    stroke="#9ca3af"
+                    stroke-width="1.5"
+                    stroke-linejoin="round"
+                  />
+
+                  <!-- Brim underside line -->
+                  <path
+                    d="M 15,104 Q 100,120 185,104"
+                    fill="none"
+                    stroke="#d1d5db"
+                    stroke-width="0.8"
+                  />
+
+                  <!-- Top button -->
+                  <circle
+                    cx="100" cy="12" r="4"
+                    fill="#d1d5db"
+                    stroke="#9ca3af"
+                    stroke-width="0.8"
+                  />
+
+                  <!-- Center embroidery zone — shown only when CENTER logo selected -->
+                  @if (logoLocation() !== NO_LOGO) {
+                    <!-- Background fill of the embroidery area -->
+                    <rect
+                      x="70" y="42" width="60" height="40" rx="5"
+                      fill="rgba(99,102,241,0.04)"
+                      stroke="#6366f1"
+                      stroke-width="1.5"
+                      stroke-dasharray="5,3"
+                    />
+
+                    @if (logoPreviewUrl()) {
+                      <!-- Uploaded logo rendered inside the embroidery area -->
+                      <image
+                        [attr.href]="logoPreviewUrl()"
+                        x="70" y="42" width="60" height="40"
+                        clip-path="url(#cap-logo-clip)"
+                        preserveAspectRatio="xMidYMid meet"
+                      />
+                    } @else {
+                      <!-- Placeholder: "LOGO" text + small stitch marks -->
+                      <text
+                        x="100" y="66"
+                        text-anchor="middle"
+                        font-size="9"
+                        fill="#a5b4fc"
+                        font-family="sans-serif"
+                        font-weight="600"
+                        letter-spacing="1"
+                      >LOGO</text>
+                      <line x1="78" y1="72" x2="122" y2="72" stroke="#c7d2fe" stroke-width="0.8" stroke-dasharray="2,2"/>
+                    }
+                  } @else {
+                    <!-- No-logo state: subtle dashed outline only (grayed) -->
+                    <rect
+                      x="70" y="42" width="60" height="40" rx="5"
+                      fill="none"
+                      stroke="#e5e7eb"
+                      stroke-width="1"
+                      stroke-dasharray="4,3"
+                    />
+                  }
+                </svg>
+              </div>
+
+              <p class="text-center text-xs mt-3"
+                [class]="logoLocation() !== NO_LOGO ? 'text-indigo-500 font-medium' : 'text-gray-400'"
+              >
+                @if (logoLocation() !== NO_LOGO) {
+                  @if (logoPreviewUrl()) {
+                    Logo cargado · aparecerá bordado en el centro
+                  } @else {
+                    Sube tu logo para verlo en la gorra
+                  }
+                } @else {
+                  Sin logo — la gorra no llevará bordado
+                }
+              </p>
+            </div>
+          }
+
+          <!-- ── Logo upload (conditional) ─────────────────────────────── -->
+          @if (requiresLogoUpload()) {
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <h2 class="text-sm font-medium text-gray-900">
+                    Logo de la empresa
+                  </h2>
+                  <p class="mt-0.5 text-xs text-gray-500">
+                    @if (isGorra()) {
+                      Sube la imagen de tu logo para bordarlo en la gorra
+                    } @else {
+                      Sube la imagen de tu logo para estamparlo en la prenda
+                    }
+                  </p>
+                </div>
+                <!-- Required badge -->
+                <span class="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20">
+                  Requerido
+                </span>
+              </div>
+
+              <app-logo-upload-field
+                formControlName="logoFile"
+              ></app-logo-upload-field>
+
+              @if (
+                form.get('logoFile')?.invalid &&
+                form.get('logoFile')?.touched
+              ) {
+                <p class="mt-2 text-xs text-red-600 flex items-center gap-1">
+                  <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                  </svg>
+                  Debes subir el logo para la ubicación seleccionada.
+                </p>
+              }
+            </div>
+          }
+
+          <!-- ── Special instructions ──────────────────────────────────── -->
+          <div>
+            <label
+              for="specialInstructions"
+              class="block text-sm font-medium text-gray-900"
+            >
+              Instrucciones especiales
+            </label>
+            <p class="mt-0.5 text-xs text-gray-500">
+              Agrega detalles personalizados para este producto
+            </p>
+            <textarea
+              id="specialInstructions"
+              rows="3"
+              [value]="specialInstructions()"
+              (input)="specialInstructions.set($any($event.target).value)"
+              placeholder="Ej. Bordado en hilo dorado, texto en mayúsculas…"
+              class="mt-2 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition-colors resize-none"
+            ></textarea>
+          </div>
+
+          <!-- ── Submit ─────────────────────────────────────────────────── -->
+          <button
+            type="submit"
+            class="flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden transition-colors"
+          >
+            Agregar al carrito
+          </button>
+        </form>
+
+        <!-- ── Product description ──────────────────────────────────────── -->
+        <div class="mt-10">
+          <h2 class="text-sm font-medium text-gray-900">
+            Detalles del producto
+          </h2>
+          <div class="mt-4 space-y-4 text-sm/6 text-gray-500 text-justify">
+            <p>{{ product()?.description }}</p>
+          </div>
+        </div>
+
+        <!-- ── Policy cards ─────────────────────────────────────────────── -->
+        <section aria-labelledby="policies-heading" class="mt-10">
+          <h2 id="policies-heading" class="sr-only">Nuestras Políticas</h2>
+          <dl
+            class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
+          >
+            <div
+              class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center"
+            >
+              <dt>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                  class="mx-auto size-6 shrink-0 text-gray-400"
+                >
+                  <path
+                    d="m6.115 5.19.319 1.913A6 6 0 0 0 8.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 0 0 2.288-4.042 1.087 1.087 0 0 0-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 0 1-.98-.314l-.295-.295a1.125 1.125 0 0 1 0-1.591l.13-.132a1.125 1.125 0 0 1 1.3-.21l.603.302a.809.809 0 0 0 1.086-1.086L14.25 7.5l1.256-.837a4.5 4.5 0 0 0 1.528-1.732l.146-.292M6.115 5.19A9 9 0 1 0 17.18 4.64M6.115 5.19A8.965 8.965 0 0 1 12 3c1.929 0 3.716.607 5.18 1.64"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span class="mt-4 text-sm font-medium text-gray-900">Envío Nacional</span>
+              </dt>
+              <dd class="mt-1 text-sm text-gray-500">Recibe tu pedido en 2 días</dd>
+            </div>
+
+            <div
+              class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center"
+            >
+              <dt>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                  class="mx-auto size-6 shrink-0 text-gray-400"
+                >
+                  <path
+                    d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span class="mt-4 text-sm font-medium text-gray-900">Recompensas de Lealtad</span>
+              </dt>
+              <dd class="mt-1 text-sm text-gray-500">No mires otros productos</dd>
+            </div>
+          </dl>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>

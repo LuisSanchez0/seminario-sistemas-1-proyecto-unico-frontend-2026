@@ -1,0 +1,559 @@
+<div class="bg-white">
+  <!-- Mobile / tablet drawer -->
+  <el-dialog>
+    <dialog #mobileMenu id="mobile-menu" class="backdrop:bg-transparent lg:hidden">
+      <el-dialog-backdrop
+        class="fixed inset-0 bg-black/25 transition-opacity duration-300 ease-linear data-closed:opacity-0"
+      ></el-dialog-backdrop>
+      <div tabindex="0" class="fixed inset-0 flex focus:outline-none">
+        <el-dialog-panel
+          class="relative flex w-full max-w-sm transform flex-col overflow-y-auto bg-white pb-12 shadow-xl transition duration-300 ease-in-out data-closed:-translate-x-full"
+        >
+          <div class="flex px-4 pt-5 pb-2">
+            <button
+              type="button"
+              command="close"
+              commandfor="mobile-menu"
+              class="relative -m-2 inline-flex items-center justify-center rounded-md p-2 text-gray-400"
+            >
+              <span class="absolute -inset-0.5"></span>
+              <span class="sr-only">Cerrar Menú</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+                class="size-6"
+              >
+                <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Categories accordion: tap only, no hover required -->
+          <div class="border-t border-gray-200 px-4 py-6">
+            <h2
+              id="mobile-products-heading"
+              class="text-xs font-semibold tracking-[0.18em] text-gray-500 uppercase"
+            >
+              Productos
+            </h2>
+
+            <ul role="list" aria-labelledby="mobile-products-heading" class="mt-4">
+              @for (item of categories; track item.value) {
+                <li class="border-b border-gray-100 last:border-b-0">
+                  <button
+                    type="button"
+                    [attr.aria-expanded]="expandedCategory() === item.value"
+                    [attr.aria-controls]="'mobile-panel-' + item.value"
+                    [attr.aria-current]="isBrowsingCategory(item.value) ? 'true' : null"
+                    (click)="toggleExpandedCategory(item.value)"
+                    class="flex w-full items-center gap-3 rounded-lg py-3 text-left"
+                  >
+                    <span
+                      class="block size-12 shrink-0 overflow-hidden rounded-xl"
+                      [style.backgroundImage]="item.gradient"
+                    >
+                      @if (!isImageBroken(item.value)) {
+                        <img
+                          [ngSrc]="item.image"
+                          width="96"
+                          height="96"
+                          alt=""
+                          (error)="onImageError(item.value)"
+                          class="h-full w-full object-cover"
+                        />
+                      }
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-base font-medium text-gray-900">{{
+                        item.label
+                      }}</span>
+                      <span class="block truncate text-xs text-gray-500">{{ item.blurb }}</span>
+                    </span>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      aria-hidden="true"
+                      class="size-5 shrink-0 text-gray-400 transition-transform duration-200"
+                      [class.rotate-90]="expandedCategory() === item.value"
+                    >
+                      <path d="m9 5 7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+
+                  <div
+                    [id]="'mobile-panel-' + item.value"
+                    [hidden]="expandedCategory() !== item.value"
+                  >
+                    <ul role="list" class="pb-3 pl-15">
+                      <li>
+                        <a
+                          [routerLink]="['/products']"
+                          [queryParams]="{ category: item.value }"
+                          (click)="closeMobileMenu()"
+                          class="block rounded-lg py-3 text-sm font-medium text-indigo-600"
+                          >Ver todo {{ item.label }}</a
+                        >
+                      </li>
+
+                      @if (isLoading(item.value)) {
+                        <li class="flex items-center gap-2 py-3 text-sm text-gray-500">
+                          <span
+                            class="loading loading-spinner loading-sm"
+                            aria-hidden="true"
+                          ></span>
+                          Cargando subcategorías…
+                        </li>
+                      } @else if (hasFailed(item.value)) {
+                        <li class="py-3 text-sm text-gray-600">
+                          No se pudieron cargar las subcategorías.
+                          <button
+                            type="button"
+                            (click)="retry(item.value)"
+                            class="ml-1 font-medium text-indigo-600 underline"
+                          >
+                            Reintentar
+                          </button>
+                        </li>
+                      } @else if ((subcategoriesOf(item.value) ?? []).length === 0) {
+                        <li class="py-3 text-sm text-gray-500">
+                          Explora todos los productos de {{ item.label }}.
+                        </li>
+                      } @else {
+                        @for (sub of subcategoriesOf(item.value); track subcategoryId(sub)) {
+                          <li>
+                            <a
+                              [routerLink]="['/products']"
+                              [queryParams]="{
+                                category: item.value,
+                                subcategory: subcategoryId(sub),
+                              }"
+                              [attr.aria-current]="isBrowsingSubcategory(sub) ? 'true' : null"
+                              (click)="closeMobileMenu()"
+                              class="block rounded-lg py-3 text-sm text-gray-600 aria-[current]:font-medium aria-[current]:text-gray-900"
+                              >{{ sub.name }}</a
+                            >
+                          </li>
+                        }
+                      }
+                    </ul>
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div class="space-y-6 border-t border-gray-200 px-4 py-6">
+            <div class="flow-root">
+              <a routerLink="/about-us" class="-m-2 block p-2 font-medium text-gray-900"
+                >Sobre Nosotros</a
+              >
+            </div>
+          </div>
+          <div class="space-y-6 border-t border-gray-200 px-4 py-6">
+            @if (authService.isAdmin()) {
+              <div class="flow-root">
+                <a routerLink="/admin" class="-m-2 block p-2 font-medium text-gray-900"
+                  >Panel Administrativo</a
+                >
+              </div>
+            }
+            @if (authService.authStatus() === 'authenticated') {
+              <div class="flow-root">
+                <a routerLink="my-orders" class="-m-2 block p-2 font-medium text-gray-900"
+                  >Mis Pedidos</a
+                >
+              </div>
+              <div class="flow-root">
+                <button
+                  type="button"
+                  class="-m-2 block p-2 font-medium text-gray-900"
+                  (click)="authService.logout()"
+                >
+                  Cerrar Sesión
+                </button>
+              </div>
+            } @else if (
+              authService.authStatus() === 'not-authenticated' ||
+              authService.authStatus() === 'twofactor'
+            ) {
+              <div class="flow-root">
+                <a routerLink="/auth/login" class="-m-2 block p-2 font-medium text-gray-900"
+                  >Inicia Sesión</a
+                >
+              </div>
+              <div class="flow-root">
+                <a routerLink="/auth/sign-in" class="-m-2 block p-2 font-medium text-gray-900"
+                  >Crea una cuenta</a
+                >
+              </div>
+            } @else {
+              <div class="flow-root">
+                <span class="-m-2 block p-2 font-medium text-gray-900">…</span>
+              </div>
+            }
+          </div>
+        </el-dialog-panel>
+      </div>
+    </dialog>
+  </el-dialog>
+
+  <header class="relative bg-white">
+    <nav aria-label="Top" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="border-b border-gray-200">
+        <div class="flex h-16 items-center">
+          <button
+            type="button"
+            command="show-modal"
+            commandfor="mobile-menu"
+            class="relative rounded-md bg-white p-2 text-gray-400 lg:hidden"
+          >
+            <span class="absolute -inset-0.5"></span>
+            <span class="sr-only">Abrir Menú</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+              class="size-6"
+            >
+              <path
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+
+          <!-- Logo -->
+          <div class="ml-4 flex lg:ml-0">
+            <a routerLink="/">
+              <span class="sr-only">ProWear</span>
+              <img
+                src="https://prowear-s3-bucket.s3.us-east-1.amazonaws.com/static/images/ChatGPT+Image+23+abr+2026%2C+12_23_48+p.m..png"
+                alt="Logo ProWear"
+                class="h-15 w-auto"
+              />
+            </a>
+          </div>
+
+          <!-- Desktop mega menu -->
+          <div class="hidden lg:ml-8 lg:block lg:self-stretch">
+            <div class="flex h-full space-x-8">
+              <div #productsMenu class="flex" (focusout)="onProductsFocusOut($event)">
+                <div class="relative flex">
+                  <button
+                    #productsTrigger
+                    type="button"
+                    aria-haspopup="true"
+                    aria-controls="productos-mega-menu"
+                    [attr.aria-expanded]="productsMenuOpen()"
+                    (click)="toggleProductsMenu()"
+                    class="relative flex items-center justify-center gap-1 text-sm font-medium text-gray-700 transition-colors duration-200 ease-out hover:text-gray-900 aria-expanded:text-indigo-600"
+                  >
+                    Productos
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      aria-hidden="true"
+                      class="size-4 transition-transform duration-200"
+                      [class.rotate-180]="productsMenuOpen()"
+                    >
+                      <path d="m5 9 7 7 7-7" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span
+                      aria-hidden="true"
+                      class="absolute inset-x-0 -bottom-px z-30 h-0.5 bg-transparent transition-colors duration-200"
+                      [class.bg-indigo-600]="productsMenuOpen()"
+                    ></span>
+                  </button>
+                </div>
+
+                @if (productsMenuOpen()) {
+                  <div
+                    id="productos-mega-menu"
+                    class="absolute inset-x-0 top-full z-40 border-t border-gray-200 bg-white shadow-lg"
+                  >
+                    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                      <div
+                        class="grid grid-cols-1 gap-x-10 gap-y-8 py-8 xl:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]"
+                      >
+                        <!-- Parent categories -->
+                        <div>
+                          <h2
+                            id="megamenu-categories-heading"
+                            class="text-xs font-semibold tracking-[0.18em] text-gray-500 uppercase"
+                          >
+                            Categorías
+                          </h2>
+                          <ul
+                            role="list"
+                            aria-labelledby="megamenu-categories-heading"
+                            class="mt-5 grid grid-cols-4 gap-x-4 gap-y-5"
+                          >
+                            @for (item of categories; track item.value) {
+                              <li>
+                                <button
+                                  type="button"
+                                  [attr.aria-current]="
+                                    isBrowsingCategory(item.value) ? 'true' : null
+                                  "
+                                  [attr.aria-controls]="'megamenu-subcategories'"
+                                  (click)="activateCategory(item.value)"
+                                  (mouseenter)="previewCategory(item.value)"
+                                  (focus)="previewCategory(item.value)"
+                                  class="group block w-full rounded-2xl border p-2 text-left transition duration-200 hover:border-gray-300 hover:shadow-sm"
+                                  [class.border-transparent]="activeCategory() !== item.value"
+                                  [class.border-indigo-600]="activeCategory() === item.value"
+                                  [class.shadow-sm]="activeCategory() === item.value"
+                                >
+                                  <span
+                                    class="relative block aspect-[4/3] overflow-hidden rounded-xl"
+                                    [style.backgroundImage]="item.gradient"
+                                  >
+                                    @if (!isImageBroken(item.value)) {
+                                      <img
+                                        [ngSrc]="item.image"
+                                        width="240"
+                                        height="180"
+                                        alt=""
+                                        (error)="onImageError(item.value)"
+                                        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      />
+                                    }
+                                  </span>
+                                  <span
+                                    class="mt-2 flex items-center gap-1.5 text-sm font-medium text-gray-900"
+                                  >
+                                    {{ item.label }}
+                                    @if (isBrowsingCategory(item.value)) {
+                                      <span
+                                        aria-hidden="true"
+                                        class="size-1.5 rounded-full bg-indigo-600"
+                                      ></span>
+                                    }
+                                  </span>
+                                  <span class="mt-0.5 block text-xs text-gray-500">{{
+                                    item.blurb
+                                  }}</span>
+                                </button>
+                              </li>
+                            }
+                          </ul>
+                        </div>
+
+                        <!-- Dynamic subcategories for the previewed category -->
+                        <div class="xl:border-l xl:border-gray-200 xl:pl-10">
+                          <p
+                            class="text-xs font-semibold tracking-[0.18em] text-gray-500 uppercase"
+                          >
+                            Explorar por categoría
+                          </p>
+                          <h3 class="mt-2 text-lg font-medium text-gray-900">
+                            {{ activeItem().label }}
+                          </h3>
+
+                          <div
+                            id="megamenu-subcategories"
+                            role="region"
+                            aria-live="polite"
+                            [attr.aria-label]="'Subcategorías de ' + activeItem().label"
+                            class="mt-4 min-h-28"
+                          >
+                            @if (isLoading(activeCategory())) {
+                              <p class="flex items-center gap-2 text-sm text-gray-500">
+                                <span
+                                  class="loading loading-spinner loading-sm"
+                                  aria-hidden="true"
+                                ></span>
+                                Cargando subcategorías…
+                              </p>
+                            } @else if (hasFailed(activeCategory())) {
+                              <p class="text-sm text-gray-600">
+                                No se pudieron cargar las subcategorías.
+                              </p>
+                              <button
+                                type="button"
+                                (click)="retry(activeCategory())"
+                                class="mt-2 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                              >
+                                Reintentar
+                              </button>
+                            } @else if ((activeSubcategories() ?? []).length === 0) {
+                              <p class="text-sm text-gray-600">
+                                Explora todos los productos de {{ activeItem().label }}.
+                              </p>
+                            } @else {
+                              <ul role="list" class="grid grid-cols-2 gap-x-6">
+                                @for (sub of activeSubcategories(); track subcategoryId(sub)) {
+                                  <li>
+                                    <a
+                                      [routerLink]="['/products']"
+                                      [queryParams]="{
+                                        category: activeCategory(),
+                                        subcategory: subcategoryId(sub),
+                                      }"
+                                      [attr.aria-current]="
+                                        isBrowsingSubcategory(sub) ? 'true' : null
+                                      "
+                                      class="-mx-2 block rounded-lg px-2 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900 aria-[current]:font-medium aria-[current]:text-gray-900"
+                                      >{{ sub.name }}</a
+                                    >
+                                  </li>
+                                }
+                              </ul>
+                            }
+                          </div>
+
+                          <a
+                            [routerLink]="['/products']"
+                            [queryParams]="{ category: activeCategory() }"
+                            class="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                          >
+                            Ver todo {{ activeItem().label }}
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              aria-hidden="true"
+                              class="size-4"
+                            >
+                              <path
+                                d="M4 12h16m0 0-6-6m6 6-6 6"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              />
+                            </svg>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <a
+                routerLink="/about-us"
+                class="flex items-center text-sm font-medium text-gray-700 hover:text-gray-800"
+                >Sobre Nosotros</a
+              >
+            </div>
+          </div>
+
+          <div class="ml-auto flex items-center">
+            <div class="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
+              @if (authService.isAdmin()) {
+                <a routerLink="/admin" class="text-sm font-medium text-gray-700 hover:text-gray-800"
+                  >Panel Administrativo</a
+                >
+                <span aria-hidden="true" class="h-6 w-px bg-gray-200"></span>
+              }
+              @if (authService.authStatus() === 'authenticated') {
+                <a
+                  routerLink="my-orders"
+                  class="text-sm font-medium text-gray-700 hover:text-gray-800"
+                  >Mis Pedidos</a
+                >
+                <span aria-hidden="true" class="h-6 w-px bg-gray-200"></span>
+                <button
+                  type="button"
+                  class="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-800"
+                  (click)="authService.logout()"
+                >
+                  Cerrar Sesión
+                </button>
+              } @else if (
+                authService.authStatus() === 'not-authenticated' ||
+                authService.authStatus() === 'twofactor'
+              ) {
+                <a
+                  routerLink="/auth/login"
+                  class="text-sm font-medium text-gray-700 hover:text-gray-800"
+                  >Iniciar Sesión</a
+                >
+                <span aria-hidden="true" class="h-6 w-px bg-gray-200"></span>
+                <a
+                  routerLink="/auth/sign-in"
+                  class="text-sm font-medium text-gray-700 hover:text-gray-800"
+                  >Crea una cuenta</a
+                >
+              } @else {
+                <span class="text-sm font-medium text-gray-700">…</span>
+              }
+            </div>
+
+            <!-- Search -->
+            <div class="flex lg:ml-6">
+              <a href="#" class="p-2 text-gray-400 hover:text-gray-500">
+                <span class="sr-only">Buscar</span>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                  class="size-6"
+                >
+                  <path
+                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </a>
+            </div>
+
+            <!-- Cart badge -->
+            <div class="ml-4 flow-root lg:ml-6">
+              <a
+                routerLink="/cart"
+                class="group relative -m-2 flex items-center p-2"
+                aria-label="Ver carrito"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                  class="size-6 shrink-0 text-gray-400 transition-colors group-hover:text-gray-500"
+                >
+                  <path
+                    d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+
+                @if (cartStore.cartItemCount() > 0) {
+                  <span
+                    class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white ring-2 ring-white"
+                  >
+                    {{ cartStore.cartItemCount() > 99 ? '99+' : cartStore.cartItemCount() }}
+                  </span>
+                } @else {
+                  <span
+                    class="ml-2 text-sm font-medium text-gray-700 transition-colors group-hover:text-gray-800"
+                    >0</span
+                  >
+                }
+
+                <span class="sr-only">
+                  {{ cartStore.cartItemCount() }} artículos en el carrito
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+</div>

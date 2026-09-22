@@ -1,0 +1,1527 @@
+<!-- Mobile filter dialog -->
+<el-dialog>
+  <dialog
+    id="mobile-filters"
+    class="overflow-hidden backdrop:bg-transparent xl:hidden"
+  >
+    <el-dialog-backdrop
+      class="fixed inset-0 bg-black/25 transition-opacity duration-300 ease-linear data-closed:opacity-0"
+    ></el-dialog-backdrop>
+
+    <div tabindex="0" class="fixed inset-0 flex focus:outline-none">
+      <el-dialog-panel
+        class="relative ml-auto flex size-full max-w-xs transform flex-col overflow-y-auto bg-white pt-4 pb-6 shadow-xl transition duration-300 ease-in-out data-closed:translate-x-full"
+      >
+        <div class="flex items-center justify-between px-4">
+          <h2 class="text-lg font-medium text-gray-900">Filtros</h2>
+          <button
+            type="button"
+            command="close"
+            commandfor="mobile-filters"
+            class="relative -mr-2 flex size-10 items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+          >
+            <span class="absolute -inset-0.5"></span>
+            <span class="sr-only">Close menu</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              data-slot="icon"
+              aria-hidden="true"
+              class="size-6"
+            >
+              <path
+                d="M6 18 18 6M6 6l12 12"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <form class="mt-4">
+          @if( !hideGenderFilters() ) {
+          <div class="border-t border-gray-200 pt-4 pb-4">
+            <fieldset>
+              <legend class="w-full px-2">
+                <button
+                  type="button"
+                  command="--toggle"
+                  commandfor="filter-section-color"
+                  class="flex w-full items-center justify-between p-2 text-gray-400 hover:text-gray-500"
+                >
+                  <span class="text-sm font-medium text-gray-900">Género</span>
+                  <span class="ml-6 flex h-7 items-center">
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      data-slot="icon"
+                      aria-hidden="true"
+                      class="size-5 transform not-in-aria-expanded:rotate-0 in-aria-expanded:-rotate-180"
+                    >
+                      <path
+                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                        clip-rule="evenodd"
+                        fill-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </legend>
+              <el-disclosure
+                id="filter-section-color"
+                hidden
+                class="block px-4 pt-4 pb-2"
+              >
+                <div class="space-y-6">
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          #genderHombresMobile
+                          type="checkbox"
+                          value="HOMBRES"
+                          name="color[]"
+                          (change)="onGenderChange(genderHombresMobile.value, genderHombresMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="color-0-mobile" class="text-sm text-gray-500"
+                      >Hombre</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="color[]"
+                          #genderMujeresMobile
+                          type="checkbox"
+                          value="MUJERES"
+                          (change)="onGenderChange(genderMujeresMobile.value, genderMujeresMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="color-1-mobile" class="text-sm text-gray-500"
+                      >Mujer</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="color[]"
+                          #genderUnisexMobile
+                          type="checkbox"
+                          value="UNISEX"
+                          (change)="onGenderChange(genderUnisexMobile.value, genderUnisexMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="color-1-mobile" class="text-sm text-gray-500"
+                      >Unisex</label
+                    >
+                  </div>
+                </div>
+              </el-disclosure>
+            </fieldset>
+          </div>
+          } @if( !hideCategoryFilters() ) {
+          <div class="border-t border-gray-200 pt-4 pb-4">
+            <fieldset>
+              <legend class="w-full px-2">
+                <button
+                  type="button"
+                  command="--toggle"
+                  commandfor="filter-section-category"
+                  class="flex w-full items-center justify-between p-2 text-gray-400 hover:text-gray-500"
+                >
+                  <span class="text-sm font-medium text-gray-900"
+                    >Categoría</span
+                  >
+                  <span class="ml-6 flex h-7 items-center">
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      data-slot="icon"
+                      aria-hidden="true"
+                      class="size-5 transform not-in-aria-expanded:rotate-0 in-aria-expanded:-rotate-180"
+                    >
+                      <path
+                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                        clip-rule="evenodd"
+                        fill-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </legend>
+              <el-disclosure
+                id="filter-section-category"
+                hidden
+                class="block px-4 pt-4 pb-2"
+              >
+                <div class="space-y-6">
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryIndustrialMobile
+                          type="checkbox"
+                          value="INDUSTRIAL"
+                          (change)="onCategoryChange(categoryIndustrialMobile.value, categoryIndustrialMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-0-mobile" class="text-sm text-gray-500"
+                      >Uniformes Industriales</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryPoloMobile
+                          type="checkbox"
+                          value="TIPO POLO"
+                          (change)="onCategoryChange(categoryPoloMobile.value, categoryPoloMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-1-mobile" class="text-sm text-gray-500"
+                      >Polos</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryOverolsMobile
+                          type="checkbox"
+                          value="OVEROL"
+                          (change)="onCategoryChange(categoryOverolsMobile.value, categoryOverolsMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-2-mobile" class="text-sm text-gray-500"
+                      >Overoles</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryCamisasMobile
+                          type="checkbox"
+                          value="CAMISA"
+                          (change)="onCategoryChange(categoryCamisasMobile.value, categoryCamisasMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-3-mobile" class="text-sm text-gray-500"
+                      >Camisas</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryBlusaMobile
+                          type="checkbox"
+                          value="BLUSA"
+                          (change)="onCategoryChange(categoryBlusaMobile.value, categoryBlusaMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-4-mobile" class="text-sm text-gray-500"
+                      >Blusas</label
+                    >
+                  </div>
+
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryGorrasMobile
+                          type="checkbox"
+                          value="GORRA"
+                          (change)="onCategoryChange(categoryGorrasMobile.value, categoryGorrasMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-4-mobile" class="text-sm text-gray-500"
+                      >Gorras</label
+                    >
+                  </div>
+
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryCrewneckMobile
+                          type="checkbox"
+                          value="CREWNECK"
+                          (change)="onCategoryChange(categoryCrewneckMobile.value, categoryCrewneckMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-4-mobile" class="text-sm text-gray-500"
+                      >Crewneck</label
+                    >
+                  </div>
+
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="category[]"
+                          #categoryPlayeraMobile
+                          type="checkbox"
+                          value="PLAYERA"
+                          (change)="onCategoryChange(categoryPlayeraMobile.value, categoryPlayeraMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="category-4-mobile" class="text-sm text-gray-500"
+                      >Playeras</label
+                    >
+                  </div>
+                </div>
+              </el-disclosure>
+            </fieldset>
+          </div>
+          }
+          <div class="border-t border-gray-200 pt-4 pb-4">
+            <fieldset>
+              <legend class="w-full px-2">
+                <button
+                  type="button"
+                  command="--toggle"
+                  commandfor="filter-section-sizes"
+                  class="flex w-full items-center justify-between p-2 text-gray-400 hover:text-gray-500"
+                >
+                  <span class="text-sm font-medium text-gray-900">Tallas</span>
+                  <span class="ml-6 flex h-7 items-center">
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      data-slot="icon"
+                      aria-hidden="true"
+                      class="size-5 transform not-in-aria-expanded:rotate-0 in-aria-expanded:-rotate-180"
+                    >
+                      <path
+                        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+                        clip-rule="evenodd"
+                        fill-rule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </legend>
+              <el-disclosure
+                id="filter-section-sizes"
+                hidden
+                class="block px-4 pt-4 pb-2"
+              >
+                <div class="space-y-6">
+                  @if (!isGorraCategory()) {
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="sizes[]"
+                          #sizeXSMobile
+                          type="checkbox"
+                          value="XS"
+                          (change)="onSizeChange(sizeXSMobile.value, sizeXSMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="sizes-0-mobile" class="text-sm text-gray-500"
+                      >XS</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="sizes[]"
+                          #sizeSMobile
+                          type="checkbox"
+                          value="S"
+                          (change)="onSizeChange(sizeSMobile.value, sizeSMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="sizes-1-mobile" class="text-sm text-gray-500"
+                      >S</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="sizes[]"
+                          #sizeMMobile
+                          type="checkbox"
+                          value="M"
+                          (change)="onSizeChange(sizeMMobile.value, sizeMMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="sizes-2-mobile" class="text-sm text-gray-500"
+                      >M</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="sizes[]"
+                          #sizeLMobile
+                          type="checkbox"
+                          value="L"
+                          (change)="onSizeChange(sizeLMobile.value, sizeLMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="sizes-3-mobile" class="text-sm text-gray-500"
+                      >L</label
+                    >
+                  </div>
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="sizes[]"
+                          #sizeXLMobile
+                          type="checkbox"
+                          value="XL"
+                          (change)="onSizeChange(sizeXLMobile.value, sizeXLMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="sizes-4-mobile" class="text-sm text-gray-500"
+                      >XL</label
+                    >
+                  </div>
+                  }
+                  <div class="flex gap-3">
+                    <div class="flex h-5 shrink-0 items-center">
+                      <div class="group grid size-4 grid-cols-1">
+                        <input
+                          name="sizes[]"
+                          #sizeTallaUnicaMobile
+                          type="checkbox"
+                          value="TALLA UNICA"
+                          (change)="onSizeChange(sizeTallaUnicaMobile.value, sizeTallaUnicaMobile.checked)"
+                          class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                        />
+                        <svg
+                          viewBox="0 0 14 14"
+                          fill="none"
+                          class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                        >
+                          <path
+                            d="M3 8L6 11L11 3.5"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-checked:opacity-100"
+                          />
+                          <path
+                            d="M3 7H11"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="opacity-0 group-has-indeterminate:opacity-100"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <label for="sizes-5-mobile" class="text-sm text-gray-500"
+                      >Talla única</label
+                    >
+                  </div>
+                </div>
+              </el-disclosure>
+            </fieldset>
+          </div>
+        </form>
+      </el-dialog-panel>
+    </div>
+  </dialog>
+</el-dialog>
+
+<main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  <div class="pt-12 pb-24 xl:grid xl:grid-cols-[280px_minmax(0,1fr)] xl:gap-x-8">
+    <aside>
+      <h2 class="sr-only">Filtros</h2>
+
+      <button
+        type="button"
+        command="show-modal"
+        commandfor="mobile-filters"
+        class="inline-flex items-center xl:hidden"
+      >
+        <span class="text-sm font-medium text-gray-700">Filtros</span>
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          data-slot="icon"
+          aria-hidden="true"
+          class="ml-1 size-5 shrink-0 text-gray-400"
+        >
+          <path
+            d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"
+          />
+        </svg>
+      </button>
+
+      <div class="hidden xl:block">
+        <form class="divide-y divide-gray-200">
+          @if ( !hideGenderFilters() ) {
+          <div class="py-10 first:pt-0 last:pb-0">
+            <fieldset>
+              <legend class="block text-sm font-medium text-gray-900">
+                Género
+              </legend>
+              <div class="space-y-3 pt-6">
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="gender[]"
+                        #genderHombresDesktop
+                        type="checkbox"
+                        value="HOMBRES"
+                        (change)="onGenderChange(genderHombresDesktop.value, genderHombresDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="color-0" class="text-sm text-gray-600"
+                    >Hombre</label
+                  >
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="gender[]"
+                        #genderMujeresDesktop
+                        type="checkbox"
+                        value="MUJERES"
+                        (change)="onGenderChange(genderMujeresDesktop.value, genderMujeresDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="color-1" class="text-sm text-gray-600"
+                    >Mujer</label
+                  >
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="gender[]"
+                        #genderUnisexDesktop
+                        type="checkbox"
+                        value="UNISEX"
+                        (change)="onGenderChange(genderUnisexDesktop.value, genderUnisexDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="color-1" class="text-sm text-gray-600"
+                    >Unisex</label
+                  >
+                </div>
+              </div>
+            </fieldset>
+          </div>
+          } @if(!hideCategoryFilters() ) {
+          <div class="py-10 first:pt-0 last:pb-0">
+            <fieldset>
+              <legend class="block text-sm font-medium text-gray-900">
+                Categoría
+              </legend>
+              <div class="space-y-3 pt-6">
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categoryIndustrialDesktop
+                        type="checkbox"
+                        value="INDUSTRIAL"
+                        (change)="onCategoryChange(categoryIndustrialDesktop.value, categoryIndustrialDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-0" class="text-sm text-gray-600"
+                    >Uniformes Industriales</label
+                  >
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categoryPoloDesktop
+                        type="checkbox"
+                        value="TIPO POLO"
+                        (change)="onCategoryChange(categoryPoloDesktop.value, categoryPoloDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-1" class="text-sm text-gray-600"
+                    >Polos</label
+                  >
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categoryOverolDesktop
+                        type="checkbox"
+                        value="OVEROL"
+                        (change)="onCategoryChange(categoryOverolDesktop.value, categoryOverolDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-2" class="text-sm text-gray-600"
+                    >Overoles</label
+                  >
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categorCamisaDesktop
+                        type="checkbox"
+                        value="CAMISA"
+                        (change)="onCategoryChange(categorCamisaDesktop.value, categorCamisaDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-3" class="text-sm text-gray-600"
+                    >Camisas</label
+                  >
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categoryBlusaDesktop
+                        type="checkbox"
+                        value="BLUSA"
+                        (change)="onCategoryChange(categoryBlusaDesktop.value, categoryBlusaDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-4" class="text-sm text-gray-600"
+                    >Blusas</label
+                  >
+                </div>
+
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categoryGorraDesktop
+                        type="checkbox"
+                        value="GORRA"
+                        (change)="onCategoryChange(categoryGorraDesktop.value, categoryGorraDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-4" class="text-sm text-gray-600"
+                    >Gorras</label
+                  >
+                </div>
+
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categoryCrewneckDesktop
+                        type="checkbox"
+                        value="CREWNECK"
+                        (change)="onCategoryChange(categoryCrewneckDesktop.value, categoryCrewneckDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-4" class="text-sm text-gray-600"
+                    >Crewnecks</label
+                  >
+                </div>
+
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="category[]"
+                        #categoryPlayeraDesktop
+                        type="checkbox"
+                        value="PLAYERA"
+                        (change)="onCategoryChange(categoryPlayeraDesktop.value, categoryPlayeraDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="category-4" class="text-sm text-gray-600"
+                    >Playeras</label
+                  >
+                </div>
+              </div>
+            </fieldset>
+          </div>
+          }
+
+          <div class="py-10 first:pt-0 last:pb-0">
+            <fieldset>
+              <legend class="block text-sm font-medium text-gray-900">
+                Tallas
+              </legend>
+              <div class="space-y-3 pt-6">
+                @if (!isGorraCategory()) {
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="sizes[]"
+                        #sizeXSDesktop
+                        type="checkbox"
+                        value="XS"
+                        (change)="onSizeChange(sizeXSDesktop.value, sizeXSDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="sizes-0" class="text-sm text-gray-600">XS</label>
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="sizes[]"
+                        #sizeSDesktop
+                        type="checkbox"
+                        value="S"
+                        (change)="onSizeChange(sizeSDesktop.value, sizeSDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="sizes-1" class="text-sm text-gray-600">S</label>
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="sizes[]"
+                        #sizeMDesktop
+                        type="checkbox"
+                        value="M"
+                        (change)="onSizeChange(sizeMDesktop.value, sizeMDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="sizes-2" class="text-sm text-gray-600">M</label>
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="sizes[]"
+                        #sizeLDesktop
+                        type="checkbox"
+                        value="L"
+                        (change)="onSizeChange(sizeLDesktop.value, sizeLDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="sizes-3" class="text-sm text-gray-600">L</label>
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="sizes[]"
+                        #sizeXLDesktop
+                        type="checkbox"
+                        value="XL"
+                        (change)="onSizeChange(sizeXLDesktop.value, sizeXLDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="sizes-4" class="text-sm text-gray-600">XL</label>
+                </div>
+                }
+                <div class="flex gap-3">
+                  <div class="flex h-5 shrink-0 items-center">
+                    <div class="group grid size-4 grid-cols-1">
+                      <input
+                        name="sizes[]"
+                        #sizeTallaUnicaDesktop
+                        type="checkbox"
+                        value="TALLA UNICA"
+                        (change)="onSizeChange(sizeTallaUnicaDesktop.value, sizeTallaUnicaDesktop.checked)"
+                        class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                      />
+                      <svg
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        class="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                      >
+                        <path
+                          d="M3 8L6 11L11 3.5"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-checked:opacity-100"
+                        />
+                        <path
+                          d="M3 7H11"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="opacity-0 group-has-indeterminate:opacity-100"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <label for="sizes-5" class="text-sm text-gray-600">Talla única</label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+        </form>
+      </div>
+    </aside>
+
+    <section
+      aria-labelledby="product-heading"
+      class="mt-6 xl:mt-0 min-w-0"
+    >
+      <h2 id="product-heading" class="sr-only">Productos</h2>
+
+      <div
+        class="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 lg:gap-x-8"
+        #groupDiv
+      >
+        @for (product of productService.products(); track product._id) {
+        <div
+          class="group relative flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md"
+        >
+          <div class="aspect-[4/5] w-full overflow-hidden bg-gray-100">
+            <img
+              [src]="product.images | productImage"
+              [alt]="product.title"
+              class="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+          <div class="flex flex-1 flex-col space-y-2 p-4">
+            <h3 class="text-sm font-medium text-gray-900 line-clamp-2">
+              <a [routerLink]="['/product', product.slug]">
+                <span aria-hidden="true" class="absolute inset-0"></span>
+                {{ product.title }}
+              </a>
+            </h3>
+            <p class="text-sm text-gray-500 line-clamp-2">
+              {{ product.description }}
+            </p>
+            <div class="mt-auto flex flex-col justify-end pt-2">
+              <p class="text-base font-semibold text-gray-900">
+                {{ product.price | currency:'GTQ':'symbol':'1.2-2':'es-GT' }}
+              </p>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </section>
+  </div>
+</main>

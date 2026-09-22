@@ -1,0 +1,61 @@
+@if (addresses().length === 0) {
+
+  <app-checkout-empty-address-state
+    (addClicked)="openAddDialog()"
+  />
+
+} @else {
+
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    @for (address of addresses(); track address._id) {
+      <app-checkout-address-card
+        [address]="address"
+        [selected]="selectedAddressId() === address._id"
+        (select)="addressSelect.emit(address._id)"
+        (edit)="openEditDialog(address)"
+        (remove)="onCardRemoveRequest(address._id)"
+      />
+    }
+  </div>
+
+  <button
+    type="button"
+    (click)="openAddDialog()"
+    [disabled]="isSaving()"
+    class="mt-3 flex items-center gap-1.5 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-500 focus:outline-none focus:underline disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    <svg
+      class="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+    Agregar nueva dirección
+  </button>
+
+}
+
+<!-- ── Add / Edit dialog ──────────────────────────────────────────────────── -->
+<app-checkout-address-dialog
+  [isOpen]="isDialogOpen()"
+  [editAddress]="dialogEditAddress()"
+  (addressSaved)="onDialogSaved($event)"
+  (closed)="onDialogClose()"
+/>
+
+<!-- ── Delete confirmation dialog ─────────────────────────────────────────── -->
+<app-checkout-confirm-dialog
+  [isOpen]="isConfirmDialogOpen()"
+  title="¿Eliminar dirección?"
+  message="Esta dirección será removida de tu lista de envío. Podrás agregar una nueva en cualquier momento."
+  [detail]="pendingRemoveDetail()"
+  confirmLabel="Sí, eliminar"
+  cancelLabel="Cancelar"
+  variant="destructive"
+  (confirmed)="onConfirmDelete()"
+  (closed)="onCancelDelete()"
+/>
