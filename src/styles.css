@@ -13,3 +13,84 @@
   outline: 2px solid currentColor;
   outline-offset: 3px;
 }
+
+/*
+  Admin-scoped theme corrections.
+
+  DaisyUI's emerald theme pairs a light mint `primary` (#66cc8a) with a dark green
+  `primary-content` (#223d30). That pair measures 5.94:1 — it clears AA on paper, but it
+  is green-on-green, so filled primary buttons ("+ Nuevo producto", "Guardar producto")
+  read as dark text on a green slab. Light text is not an option on the mint: white on
+  #66cc8a is 1.99:1. So the admin area deepens `primary` itself and pairs it with white,
+  which is what gives a dark-green button a genuinely light, high-contrast label.
+
+  Scoped to `.admin-theme` so the storefront keeps stock emerald untouched.
+*/
+.admin-theme {
+  --color-primary: oklch(46% 0.12 155);
+  --color-primary-content: oklch(100% 0 0);
+}
+
+/*
+  The global focus ring above resolves to `currentColor`. On a white-on-green button that
+  would paint a white ring onto a light page background — invisible. Anchor admin focus
+  rings to `base-content` instead, which stays visible on every admin surface.
+*/
+.admin-theme :where(button, a, input, select, textarea):focus-visible {
+  outline-color: var(--color-base-content);
+}
+
+/*
+  DaisyUI renders disabled buttons as `base-content` at 20% alpha over a 10% tint: 1.41:1.
+  "Guardar producto" is disabled whenever the form is invalid — which is its initial state
+  on a new product — so that label was effectively invisible. Use opaque mixes so the
+  result is deterministic regardless of the surface underneath.
+*/
+.admin-theme .btn:is(:disabled, [disabled], [aria-disabled='true']) {
+  color: color-mix(in oklab, var(--color-base-content) 78%, var(--color-base-100));
+}
+
+.admin-theme .btn:is(:disabled, [disabled], [aria-disabled='true']):not(.btn-link, .btn-ghost) {
+  background-color: color-mix(in oklab, var(--color-base-content) 12%, var(--color-base-100));
+  border-color: color-mix(in oklab, var(--color-base-content) 25%, var(--color-base-100));
+}
+
+/*
+  Angular CDK drag-and-drop feedback for the admin image gallery.
+
+  The preview is rendered with `cdkDragPreviewContainer="parent"`, so it stays inside the
+  `.admin-theme` subtree and keeps the corrected primary tokens above — a preview appended
+  to <body> would fall back to stock emerald and flash a different "Portada" badge.
+*/
+.image-reorder-list .cdk-drag-preview {
+  /* The clone is a fixed-size box; keep any overhanging child from adding scrollbars. */
+  overflow: hidden;
+  border-radius: var(--radius-box);
+  box-shadow:
+    0 12px 24px -8px oklch(0% 0 0 / 0.3),
+    0 4px 8px -4px oklch(0% 0 0 / 0.2);
+  opacity: 0.95;
+}
+
+.image-reorder-list .cdk-drag-placeholder {
+  background-color: var(--color-base-200);
+  border-style: dashed;
+  opacity: 0.5;
+}
+
+.image-reorder-list .cdk-drag-animating,
+.image-reorder-list.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* The handle is the only drag affordance, so it must not fight page scrolling on touch. */
+.image-reorder-list [cdkDragHandle] {
+  touch-action: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-reorder-list .cdk-drag-animating,
+  .image-reorder-list.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+    transition: none;
+  }
+}

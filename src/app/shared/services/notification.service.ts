@@ -39,7 +39,11 @@ export class NotificationService {
   }
 }
 
-export function apiErrorMessage(error: unknown): string {
+/**
+ * Reads the backend's `{ ok: false, msg }` body. `fallback` lets a single operation replace the
+ * generic copy with something actionable without changing it for every other caller.
+ */
+export function apiErrorMessage(error: unknown, fallback = 'Ocurrió un error inesperado.'): string {
   if (typeof error === 'object' && error !== null && 'error' in error) {
     const body: unknown = error.error;
     if (
@@ -51,5 +55,5 @@ export function apiErrorMessage(error: unknown): string {
     )
       return body.msg;
   }
-  return 'Ocurrió un error inesperado.';
+  return fallback;
 }

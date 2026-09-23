@@ -403,33 +403,70 @@
               name="El precio debe "
             />
           </div>
-          <div>
-            <label for="product-stock" class="mb-2 block font-medium">Stock disponible</label>
-            <input
-              id="product-stock"
-              type="number"
-              min="0"
-              inputmode="numeric"
-              class="input input-bordered w-full"
-              formControlName="stock"
-              aria-describedby="stock-status stock-error"
-            />
-            <p id="stock-status" class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-              <span
-                class="badge"
-                [class.badge-success]="stockLevel() === 'ok'"
-                [class.badge-warning]="stockLevel() === 'low'"
-                [class.badge-error]="stockLevel() === 'out'"
-                >{{ stockLabel() }}</span
-              >
-              <span class="text-base-content/80">{{ stockHint() }}</span>
-            </p>
-            <form-error-label
-              id="stock-error"
-              [control]="productForm.controls.stock"
-              name="El stock debe "
-            />
-          </div>
+          @if (isEditMode()) {
+            <!-- Edit mode never exposes the absolute stock: it only grows through entries. -->
+            <div
+              class="border-base-300 bg-base-200 rounded-xl border p-4"
+              aria-labelledby="stock-current-label"
+            >
+              <p id="stock-current-label" class="font-medium">Inventario actual</p>
+              <p class="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span class="text-2xl font-semibold">{{ stockCount() }}</span>
+                <span class="text-sm">{{ stockCount() === 1 ? 'unidad' : 'unidades' }}</span>
+                <span
+                  class="badge"
+                  [class.badge-success]="stockLevel() === 'ok'"
+                  [class.badge-warning]="stockLevel() === 'low'"
+                  [class.badge-error]="stockLevel() === 'out'"
+                  >{{ stockLabel() }}</span
+                >
+              </p>
+              <p class="text-base-content/80 mt-2 text-sm">
+                {{ stockHint() }} El inventario se incrementa mediante entradas de stock.
+              </p>
+              <button type="button" class="btn btn-primary mt-4 gap-2" (click)="openAddStock()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  aria-hidden="true"
+                  class="size-4 shrink-0"
+                >
+                  <path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Agregar existencias
+              </button>
+            </div>
+          } @else {
+            <div>
+              <label for="product-stock" class="mb-2 block font-medium">Stock inicial</label>
+              <input
+                id="product-stock"
+                type="number"
+                min="0"
+                inputmode="numeric"
+                class="input input-bordered w-full"
+                formControlName="stock"
+                aria-describedby="stock-status stock-error"
+              />
+              <p id="stock-status" class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                <span
+                  class="badge"
+                  [class.badge-success]="stockLevel() === 'ok'"
+                  [class.badge-warning]="stockLevel() === 'low'"
+                  [class.badge-error]="stockLevel() === 'out'"
+                  >{{ stockLabel() }}</span
+                >
+                <span class="text-base-content/80">{{ stockHint() }}</span>
+              </p>
+              <form-error-label
+                id="stock-error"
+                [control]="productForm.controls.stock"
+                name="El stock debe "
+              />
+            </div>
+          }
         </div>
       </fieldset>
     </section>
@@ -515,6 +552,9 @@
           <h2 id="images-heading" class="text-lg font-semibold">Imágenes</h2>
           <p class="text-base-content/80 text-sm">
             La primera imagen se usa como portada del catálogo.
+            @if (canReorderImages()) {
+              Usa los controles de cada imagen para cambiar el orden.
+            }
           </p>
         </div>
       </div>
@@ -536,44 +576,146 @@
           </p>
         </div>
 
-        @if (currentImages().length || pendingImages().length) {
-          <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        @if (currentImages().length) {
+          <!--
+            Only persisted images take part in the drop list: pending uploads have no S3
+            key yet, so they render in their own grid below and are never reorderable.
+            `mixed` orientation is what lets CDK sort correctly across a wrapping grid.
+          -->
+          <ul
+            cdkDropList
+            cdkDropListOrientation="mixed"
+            class="image-reorder-list grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+            [cdkDropListDisabled]="busy() || !canReorderImages()"
+            [cdkDropListData]="currentImages()"
+            (cdkDropListDropped)="dropImage($event)"
+          >
             @for (image of currentImages(); track image.key; let index = $index) {
-              <li class="border-base-300 bg-base-100 relative rounded-xl border p-2">
+              <li
+                cdkDrag
+                cdkDragPreviewContainer="parent"
+                class="border-base-300 bg-base-100 rounded-xl border p-2"
+                [cdkDragDisabled]="busy() || !canReorderImages()"
+              >
+                <div class="flex items-center gap-2">
+                  @if (canReorderImages()) {
+                    <button
+                      type="button"
+                      cdkDragHandle
+                      class="btn btn-circle btn-ghost shrink-0 cursor-grab active:cursor-grabbing"
+                      [disabled]="busy()"
+                      [attr.aria-label]="
+                        'Arrastrar imagen ' + (index + 1) + ' para cambiar su posición'
+                      "
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        class="size-4"
+                      >
+                        <circle cx="9" cy="5" r="1.6" />
+                        <circle cx="15" cy="5" r="1.6" />
+                        <circle cx="9" cy="12" r="1.6" />
+                        <circle cx="15" cy="12" r="1.6" />
+                        <circle cx="9" cy="19" r="1.6" />
+                        <circle cx="15" cy="19" r="1.6" />
+                      </svg>
+                    </button>
+                  }
+                  <span class="ml-auto">
+                    @if (index === 0) {
+                      <span class="badge badge-primary badge-sm">Portada</span>
+                    } @else {
+                      <span class="badge badge-ghost badge-sm">Imagen {{ index + 1 }}</span>
+                    }
+                  </span>
+                </div>
                 <img
                   [src]="image.url"
                   [alt]="'Imagen ' + (index + 1) + ' de ' + headerTitle()"
-                  class="aspect-square w-full rounded-lg object-contain"
+                  class="mt-2 aspect-square w-full rounded-lg object-contain"
                 />
-                <div
-                  class="tooltip absolute top-3 right-3"
-                  [attr.data-tip]="'Eliminar imagen ' + (index + 1)"
-                >
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-circle btn-error shadow-sm"
-                    [disabled]="busy()"
-                    [attr.aria-label]="'Eliminar imagen ' + (index + 1)"
-                    (click)="askDeleteImage(image)"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      aria-hidden="true"
-                      class="size-4"
+                <div class="mt-2 flex items-center gap-1">
+                  @if (canReorderImages()) {
+                    <button
+                      type="button"
+                      class="btn btn-circle btn-ghost"
+                      [disabled]="busy() || index === 0"
+                      [attr.aria-label]="'Mover imagen ' + (index + 1) + ' antes'"
+                      (click)="moveImage(index, -1)"
                     >
-                      <path
-                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        aria-hidden="true"
+                        class="size-4"
+                      >
+                        <path
+                          d="M15.75 19.5 8.25 12l7.5-7.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-circle btn-ghost"
+                      [disabled]="busy() || index === currentImages().length - 1"
+                      [attr.aria-label]="'Mover imagen ' + (index + 1) + ' después'"
+                      (click)="moveImage(index, 1)"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        aria-hidden="true"
+                        class="size-4"
+                      >
+                        <path
+                          d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  }
+                  <!-- No tooltip here: its pseudo-element widens the CDK drag preview, and
+                       the aria-label already names the action like the move buttons do. -->
+                  <div class="ml-auto">
+                    <button
+                      type="button"
+                      class="btn btn-circle btn-ghost text-error"
+                      [disabled]="busy()"
+                      [attr.aria-label]="'Eliminar imagen ' + (index + 1)"
+                      (click)="askDeleteImage(image)"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        aria-hidden="true"
+                        class="size-4"
+                      >
+                        <path
+                          d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </li>
             }
+          </ul>
+        }
+        @if (pendingImages().length) {
+          <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             @for (image of pendingImages(); track image.url; let index = $index) {
               <li class="border-base-300 bg-base-100 relative rounded-xl border border-dashed p-2">
                 <img
@@ -614,6 +756,47 @@
               </li>
             }
           </ul>
+        }
+        @if (currentImages().length || pendingImages().length) {
+          @if (imagesOrderDirty()) {
+            <div
+              class="border-base-300 bg-base-200 flex flex-wrap items-center gap-3 rounded-xl border p-4"
+            >
+              <p class="flex flex-wrap items-center gap-2">
+                <span class="badge badge-warning">Orden modificado</span>
+                <span class="text-base-content/80 text-sm">
+                  La portada y el orden se guardan por separado.
+                </span>
+              </p>
+              <div class="ml-auto flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  class="btn btn-ghost"
+                  [disabled]="busy()"
+                  (click)="discardImageOrder()"
+                >
+                  Descartar cambios
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="busy()"
+                  [attr.aria-busy]="savingImageOrder()"
+                  (click)="saveImageOrder()"
+                >
+                  @if (savingImageOrder()) {
+                    <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+                  }
+                  {{ savingImageOrder() ? 'Guardando orden…' : 'Guardar orden' }}
+                </button>
+              </div>
+            </div>
+          }
+          @if (imageOrderError()) {
+            <div role="alert" class="alert alert-error">
+              <span>{{ imageOrderError() }}</span>
+            </div>
+          }
         } @else {
           <div class="border-base-300 rounded-2xl border border-dashed p-8 text-center">
             <svg
@@ -695,6 +878,96 @@
     </div>
   </form>
 </div>
+@if (isEditMode()) {
+  <!-- Outside the pricing fieldset so its controls stay usable while the page is busy. -->
+  <dialog
+    #stockDialog
+    class="modal"
+    aria-labelledby="add-stock-title"
+    (cancel)="addingStock() ? $event.preventDefault() : null"
+  >
+    <form
+      [formGroup]="stockForm"
+      (ngSubmit)="addStock()"
+      class="modal-box max-h-[85dvh] overflow-y-auto"
+    >
+      <h2 id="add-stock-title" class="text-lg font-semibold">Agregar existencias</h2>
+      <p class="text-base-content/80 mt-1 text-sm">
+        La cantidad que escribas se suma al inventario actual; no lo reemplaza.
+      </p>
+      <fieldset [disabled]="addingStock()" class="mt-5">
+        <legend class="sr-only">Entrada de inventario</legend>
+        <label for="stock-quantity" class="mb-2 block font-medium">Cantidad a agregar</label>
+        <input
+          id="stock-quantity"
+          type="number"
+          min="1"
+          step="1"
+          inputmode="numeric"
+          class="input input-bordered w-full"
+          formControlName="quantity"
+          autofocus
+          aria-describedby="stock-quantity-help stock-summary"
+        />
+        <p id="stock-quantity-help" class="text-base-content/80 mt-2 text-sm">
+          Escribe un número entero mayor que cero.
+        </p>
+        @if (stockForm.controls.quantity.touched && stockForm.controls.quantity.invalid) {
+          <p
+            role="alert"
+            class="bg-error/20 text-base-content mt-2 rounded-lg px-3 py-2 text-sm font-medium"
+          >
+            Indica cuántas unidades enteras quieres agregar (mínimo 1).
+          </p>
+        }
+      </fieldset>
+      <dl id="stock-summary" class="border-base-300 bg-base-200 mt-5 rounded-xl border p-4 text-sm">
+        <div class="flex items-baseline justify-between gap-3">
+          <dt>Stock actual</dt>
+          <dd class="font-medium">{{ stockCount() }}</dd>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between gap-3">
+          <dt>Se agregarán</dt>
+          <dd class="font-medium">+{{ quantityToAdd() }}</dd>
+        </div>
+        <div
+          class="border-base-300 mt-3 flex items-baseline justify-between gap-3 border-t pt-3 text-base"
+        >
+          <dt class="font-medium">Nuevo stock</dt>
+          <dd class="font-semibold">
+            {{ projectedStock() }} {{ projectedStock() === 1 ? 'unidad' : 'unidades' }}
+          </dd>
+        </div>
+      </dl>
+      @if (stockError()) {
+        <div role="alert" class="alert alert-error mt-5">
+          <span>{{ stockError() }}</span>
+        </div>
+      }
+      <div class="modal-action flex-wrap">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          [disabled]="addingStock()"
+          (click)="closeAddStock()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!canAddStock()"
+          [attr.aria-busy]="addingStock()"
+        >
+          @if (addingStock()) {
+            <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+          }
+          {{ addingStock() ? 'Agregando…' : 'Agregar existencias' }}
+        </button>
+      </div>
+    </form>
+  </dialog>
+}
 <app-catalog-manager #brandManager kind="brand" (changed)="catalogChanged($event)" />
 <app-catalog-manager #subcategoryManager kind="subcategory" (changed)="catalogChanged($event)" />
 <app-confirm-dialog

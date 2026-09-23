@@ -95,6 +95,18 @@ export class ProductService {
       .pipe(tap((product) => this.updateProductCache(product)));
   }
 
+  /**
+   * Reads a product straight from the API, bypassing `productCache`.
+   *
+   * `getProductById` may answer from a cache entry of any age, which is fine for display
+   * but not for anything that must reason about current stock.
+   */
+  refreshProductById(id: string): Observable<Product> {
+    return this.http
+      .get<Product & { ok: boolean }>(`${baseUrl}/products/${id}`)
+      .pipe(tap((product) => this.updateProductCache(product)));
+  }
+
   getProductBySlug(slug: string): Observable<Product> {
     const cached = this.productCache.get(slug);
     if (cached) return of(cached);
@@ -154,6 +166,42 @@ export class ProductService {
     return this.http
       .delete<{ ok: boolean }>(`${baseUrl}/upload/products/${id}`, { body: { key } })
       .pipe(tap(() => this.clearProductsCache()));
+  }
+
+  /**
+   * Adds `quantity` units to the product's inventory.
+   *
+   * The API exposes no atomic increment endpoint, so this reads the current stock and
+   * writes back the computed absolute value through the generic product PATCH. The read
+   * deliberately bypasses `productCache` so the sum starts from server state rather than
+   * from a value this tab may have held for a long time, but the operation is still a
+   * read-modify-write: a concurrent sale or a second admin writing between the two calls
+   * can be overwritten. Replace both calls with a single atomic
+   * `PATCH /products/:id/stock/add` (`$inc`) once the backend provides it.
+   */
+  addStock(id: string, quantity: number): Observable<Product> {
+    return this.refreshProductById(id).pipe(
+      concatMap((product) => this.updateProduct(id, { stock: product.stock + quantity })),
+    );
+  }
+
+  /**
+   * Persists a new order for images the product already owns, identified by key.
+   *
+   * Mirrors the existing upload endpoints' `{ ok, model }` response shape. Keys are sent
+   * instead of image objects so the backend can reorder its own records without ever
+   * accepting a caller-supplied `url` or S3 object.
+   */
+  reorderProductImages(id: string, keys: string[]): Observable<Image[]> {
+    return this.http
+      .patch<{
+        ok: boolean;
+        model: Product;
+      }>(`${baseUrl}/upload/products/${id}/images/order`, { keys })
+      .pipe(
+        tap((response) => this.updateProductsCache(response.model)),
+        map((response) => response.model.images),
+      );
   }
 
   getBrands(): Observable<Brand[]> {

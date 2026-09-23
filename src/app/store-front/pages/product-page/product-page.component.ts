@@ -41,9 +41,8 @@ export class ProductPageComponent {
   readonly images = computed(() => this.product()?.images.map((image) => image.url) ?? []);
   readonly remainingStock = computed(() => {
     const product = this.product();
-    return product
-      ? Math.max(0, product.stock - this.cartStore.getReservedQuantity(product.id))
-      : 0;
+    // Same rule the cart uses, so both pages agree on what is still addable.
+    return product ? this.cartStore.availableToAdd(product.id, product.stock) : 0;
   });
   readonly quantityControl = new FormControl(1, { nonNullable: true });
   readonly form = new FormGroup({ quantity: this.quantityControl });
@@ -119,6 +118,7 @@ export class ProductPageComponent {
           slug: product.slug,
           price: product.price,
           stock: product.stock,
+          brand: product.brand?.name,
           imageUrl: product.images[0]?.url ?? '/images/product-placeholder.svg',
         },
         quantity,

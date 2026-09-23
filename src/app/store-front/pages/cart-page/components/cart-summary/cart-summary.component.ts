@@ -4,13 +4,17 @@ import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-cart-summary',
-  standalone: true,
   imports: [CurrencyPipe, RouterLink],
   templateUrl: './cart-summary.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CartSummaryComponent {
+  subtotal = input.required<number>();
   total = input.required<number>();
   itemCount = input.required<number>();
   lineCount = input.required<number>();
+  /** Gate computed once on the page; never re-derived here. */
+  canCheckout = input.required<boolean>();
+  blockReason = input<string>('');
+  validating = input<boolean>(false);
 }

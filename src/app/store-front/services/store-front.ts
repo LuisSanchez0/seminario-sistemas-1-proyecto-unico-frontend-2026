@@ -13,6 +13,8 @@ export interface CartProductRef {
   price: number;
   imageUrl: string;
   stock: number;
+  /** Brand name, shown above the title on the cart line. Optional: older carts lack it. */
+  brand?: string;
 }
 
 export interface CartItem {
@@ -77,6 +79,7 @@ function loadFromStorage(key: string): CartItem[] {
           imageUrl: p['imageUrl'],
           price: p['price'],
           stock: p['stock'],
+          ...(typeof p['brand'] === 'string' && p['brand'] ? { brand: p['brand'] } : {}),
         },
         quantity,
       });
@@ -173,9 +176,33 @@ export class StoreFront {
     return this._cartItems().find((item) => item.product.id === productId)?.quantity ?? 0;
   }
 
+  /**
+   * Units of `productId` that may still be added on top of what the cart already holds.
+   * Single source of the "don't oversell" rule shared by the product page and the cart.
+   */
+  availableToAdd(productId: string, stock: number): number {
+    return Math.max(0, stock - this.getReservedQuantity(productId));
+  }
+
+  /**
+   * Replaces the persisted product snapshot of a line with fresh server data, leaving the
+   * chosen quantity untouched. The cart page calls this after revalidating stock so the
+   * refreshed numbers persist and the product page sees them too, instead of each screen
+   * keeping its own idea of how much stock is left.
+   */
+  applyProductSnapshot(productId: string, snapshot: Partial<Omit<CartProductRef, 'id'>>): void {
+    this._cartItems.update((items) =>
+      items.map((item) =>
+        item.product.id === productId
+          ? { ...item, product: { ...item.product, ...snapshot } }
+          : item,
+      ),
+    );
+  }
+
   addToCart({ product, quantity }: AddToCartInput): AddToCartResult {
     const reserved = this.getReservedQuantity(product.id);
-    const available = Math.max(0, product.stock - reserved);
+    const available = this.availableToAdd(product.id, product.stock);
     if (
       !Number.isInteger(quantity) ||
       quantity < 1 ||
@@ -191,6 +218,7 @@ export class StoreFront {
       price: product.price,
       imageUrl: product.imageUrl,
       stock: product.stock,
+      ...(product.brand ? { brand: product.brand } : {}),
     };
     this._cartItems.update((items) => {
       const line = { product: snapshot, quantity: reserved + quantity };

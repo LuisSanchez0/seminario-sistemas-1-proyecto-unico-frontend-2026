@@ -10,6 +10,7 @@
           width="600"
           height="600"
           [alt]="productTitle()"
+          [priority]="$first"
           class="w-full max-h-[480px] object-contain aspect-square animate-fadeIn"
         />
       </div>
@@ -20,7 +21,7 @@
           width="600"
           height="600"
           [alt]="productTitle()"
-          loading="lazy"
+          priority
           class="w-full max-h-[480px] object-contain aspect-square animate-fadeIn"
         />
       </div>

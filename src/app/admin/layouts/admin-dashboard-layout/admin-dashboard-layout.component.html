@@ -1,8 +1,9 @@
 <!--
   Theme root for the whole admin area. Every admin page renders below this node and
   inherits these DaisyUI tokens, so pages must not declare their own `data-theme`.
+  `admin-theme` carries the admin-only contrast corrections defined in `src/styles.css`.
 -->
-<div data-theme="emerald" class="bg-base-200 text-base-content min-h-dvh">
+<div data-theme="emerald" class="admin-theme bg-base-200 text-base-content min-h-dvh">
   <!-- Mobile / tablet drawer: native <dialog> driven by the invoker command API. -->
   <el-dialog>
     <dialog #sidebarDialog id="sidebar" class="backdrop:bg-transparent lg:hidden">

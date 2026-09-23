@@ -93,6 +93,7 @@ describe('Cosmetics product detail', () => {
           slug: product.slug,
           price: product.price,
           stock: 3,
+          brand: product.brand.name,
           imageUrl: '/images/product-placeholder.svg',
         },
         quantity: 3,

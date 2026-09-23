@@ -1,100 +1,198 @@
-<div class="flex py-6 sm:py-10">
-  <!-- Product image -->
-  <div class="shrink-0">
+<article class="py-6 sm:py-8">
+  <div class="flex gap-4 sm:gap-6">
+    <!-- Cover: the backend image order is authoritative, so images[0] is the cover. -->
     <img
       [src]="item().product.imageUrl"
       [alt]="item().product.title"
-      class="size-24 rounded-lg bg-gray-100 object-contain sm:size-40"
+      class="size-24 shrink-0 rounded-lg bg-gray-100 object-contain sm:size-32"
     />
-  </div>
 
-  <!-- Details + controls -->
-  <div class="ml-4 flex min-w-0 flex-1 flex-col justify-between sm:ml-6">
-    <div class="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
-      <!-- Left column: info -->
-      <div>
-        <div class="flex justify-between">
-          <h3 class="text-sm">
-            <a
-              [routerLink]="['/product', item().product.slug]"
-              class="font-semibold text-gray-800 hover:text-indigo-600 transition-colors"
-            >
-              {{ item().product.title }}
-            </a>
-          </h3>
-        </div>
+    <div class="flex min-w-0 flex-1 flex-col gap-4 sm:flex-row sm:justify-between">
+      <!-- Identity + price + availability -->
+      <div class="min-w-0">
+        @if (item().product.brand) {
+          <p class="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+            {{ item().product.brand }}
+          </p>
+        }
+        <h3 class="mt-0.5 text-base font-semibold text-gray-900">
+          <a
+            [routerLink]="['/product', item().product.slug]"
+            class="transition-colors hover:text-indigo-600"
+          >
+            {{ item().product.title }}
+          </a>
+        </h3>
 
-        <p class="mt-2 text-sm font-medium text-gray-900">
-          {{ item().product.price | currency: 'GTQ' : 'symbol' : '1.2-2' : 'es-GT' }}
-          <span class="ml-1 text-xs font-normal text-gray-600">c/u</span>
+        <p class="mt-2 text-sm text-gray-900">
+          <span class="font-medium">{{
+            item().product.price | currency: 'GTQ' : 'symbol' : '1.2-2'
+          }}</span>
+          <span class="ml-1 text-gray-600">c/u</span>
+        </p>
+
+        <!-- Availability: the icon/word carries the meaning, never the colour alone. -->
+        <p class="mt-2 flex items-center gap-1.5 text-xs">
+          @switch (state()) {
+            @case ('checking') {
+              <span class="loading loading-spinner loading-xs text-gray-400" aria-hidden="true">
+              </span>
+              <span class="text-gray-500">Verificando disponibilidad…</span>
+            }
+            @case ('removed') {
+              <span class="font-medium text-red-700">Ya no está disponible</span>
+            }
+            @case ('failed') {
+              <span class="font-medium text-amber-700">Disponibilidad sin verificar</span>
+            }
+            @default {
+              @if (availability() === 'out') {
+                <span class="font-medium text-red-700">Agotado</span>
+              } @else if (availability() === 'low') {
+                <span class="font-medium text-amber-700">{{ availabilityLabel() }}</span>
+              } @else {
+                <span class="text-gray-600">{{ availabilityLabel() }}</span>
+              }
+            }
+          }
         </p>
       </div>
 
-      <!-- Right column: quantity + remove -->
-      <div class="mt-4 sm:mt-0 sm:pr-9">
-        <!-- Quantity stepper -->
-        <div class="flex items-center gap-1.5">
-          <button
-            type="button"
-            (click)="onDecrement()"
-            [disabled]="item().quantity <= 1"
-            class="flex h-11 w-11 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Disminuir cantidad"
+      <!-- Quantity + subtotal + remove -->
+      <div class="flex shrink-0 flex-wrap items-start gap-x-8 gap-y-4 sm:flex-col sm:items-end">
+        <div>
+          <p class="text-xs font-medium text-gray-600" [id]="'qty-label-' + item().product.id">
+            Cantidad
+          </p>
+          <div
+            class="mt-1.5 flex items-center gap-1"
+            role="group"
+            [attr.aria-labelledby]="'qty-label-' + item().product.id"
           >
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path d="M3 10a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Z" />
-            </svg>
-          </button>
-
-          <span class="w-8 text-center text-sm font-semibold text-gray-900">
-            {{ item().quantity }}
-          </span>
-
-          <button
-            type="button"
-            (click)="onIncrement()"
-            [disabled]="isAtMax()"
-            [title]="isAtMax() ? 'Has alcanzado el stock disponible del producto' : ''"
-            class="flex h-11 w-11 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label="Aumentar cantidad"
-          >
-            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path
-                d="M10 3a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H4a1 1 0 1 1 0-2h5V4a1 1 0 0 1 1-1Z"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Remove button (top-right corner) -->
-        <div class="absolute right-0 top-0">
-          <button
-            type="button"
-            (click)="remove.emit()"
-            class="-m-2 inline-flex p-2 text-gray-600 transition-colors hover:text-red-500"
-            aria-label="Eliminar artículo"
-          >
-            <svg
-              class="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+            <button
+              type="button"
+              (click)="onDecrement()"
+              [disabled]="isAtMin() || controlsDisabled()"
+              class="flex size-11 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+              [attr.aria-label]="'Disminuir cantidad de ' + item().product.title"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
+              <svg class="size-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M3 10a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1Z" />
+              </svg>
+            </button>
+
+            <output
+              class="w-10 text-center text-base font-semibold text-gray-900 tabular-nums"
+              [attr.aria-label]="item().quantity + ' unidades de ' + item().product.title"
+            >
+              {{ item().quantity }}
+            </output>
+
+            <button
+              type="button"
+              (click)="onIncrement()"
+              [disabled]="isAtMax() || controlsDisabled()"
+              class="flex size-11 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+              [attr.aria-label]="'Aumentar cantidad de ' + item().product.title"
+            >
+              <svg class="size-3" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path
+                  d="M10 3a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H4a1 1 0 1 1 0-2h5V4a1 1 0 0 1 1-1Z"
+                />
+              </svg>
+            </button>
+          </div>
+          @if (isAtMax() && !controlsDisabled()) {
+            <p class="mt-1.5 text-xs text-gray-500">Máximo disponible</p>
+          }
         </div>
+
+        <div class="sm:text-right">
+          <p class="text-xs font-medium text-gray-600">Subtotal</p>
+          <p class="mt-1.5 text-base font-semibold text-gray-900">
+            {{ subtotal() | currency: 'GTQ' : 'symbol' : '1.2-2' }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          (click)="remove.emit()"
+          class="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-gray-600 transition-colors hover:bg-red-50 hover:text-red-700"
+          [attr.aria-label]="'Eliminar ' + item().product.title + ' del carrito'"
+        >
+          <svg
+            class="size-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m14.74 9-.346 9m-4.788 0L9.26 9M18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79h14.456Z"
+            />
+          </svg>
+          Eliminar
+        </button>
       </div>
     </div>
-
-    <!-- Subtotal row -->
-    <div class="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-      <p class="text-xs text-gray-600">Subtotal</p>
-      <p class="text-sm font-semibold text-gray-900">
-        {{ subtotal() | currency: 'GTQ' : 'symbol' : '1.2-2' : 'es-GT' }}
-      </p>
-    </div>
   </div>
-</div>
+
+  <!-- Problem banners: each states the issue in words and offers the way out. -->
+  @if (state() === 'reduced') {
+    <div role="alert" class="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 sm:p-4">
+      <p class="text-sm font-semibold text-amber-900">Stock actualizado</p>
+      <p class="mt-1 text-sm text-amber-900">
+        Solo hay {{ stock() }} {{ stock() === 1 ? 'unidad disponible' : 'unidades disponibles' }}.
+        Tienes {{ item().quantity }} en el carrito.
+      </p>
+      <button
+        type="button"
+        (click)="adjustToStock.emit()"
+        class="mt-3 inline-flex min-h-11 items-center rounded-md bg-amber-900 px-4 text-sm font-medium text-white transition-colors hover:bg-amber-800"
+      >
+        Ajustar a {{ stock() }}
+      </button>
+    </div>
+  } @else if (state() === 'out') {
+    <div role="alert" class="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 sm:p-4">
+      <p class="text-sm font-semibold text-red-900">Agotado</p>
+      <p class="mt-1 text-sm text-red-900">
+        Este producto se quedó sin existencias mientras estaba en tu carrito.
+      </p>
+      <button
+        type="button"
+        (click)="remove.emit()"
+        class="mt-3 inline-flex min-h-11 items-center rounded-md bg-red-900 px-4 text-sm font-medium text-white transition-colors hover:bg-red-800"
+      >
+        Eliminar del carrito
+      </button>
+    </div>
+  } @else if (state() === 'removed') {
+    <div role="alert" class="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 sm:p-4">
+      <p class="text-sm font-semibold text-red-900">Este producto ya no está disponible.</p>
+      <button
+        type="button"
+        (click)="remove.emit()"
+        class="mt-3 inline-flex min-h-11 items-center rounded-md bg-red-900 px-4 text-sm font-medium text-white transition-colors hover:bg-red-800"
+      >
+        Eliminar del carrito
+      </button>
+    </div>
+  } @else if (state() === 'failed') {
+    <div role="alert" class="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 sm:p-4">
+      <p class="text-sm font-semibold text-amber-900">
+        No pudimos verificar la disponibilidad de este producto.
+      </p>
+      <button
+        type="button"
+        (click)="retry.emit()"
+        class="mt-3 inline-flex min-h-11 items-center rounded-md bg-amber-900 px-4 text-sm font-medium text-white transition-colors hover:bg-amber-800"
+      >
+        Reintentar
+      </button>
+    </div>
+  }
+</article>
