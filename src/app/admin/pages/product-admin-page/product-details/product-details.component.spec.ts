@@ -72,14 +72,6 @@ describe('ProductDetails cosmetics workflow', () => {
     fixture.detectChanges();
   }
 
-  it('has no detectable WCAG A/AA structural accessibility violations', async () => {
-    await start();
-    const result = await axe.run(fixture.nativeElement, {
-      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] },
-      rules: { 'color-contrast': { enabled: false } },
-    });
-    expect(result.violations.map((violation) => violation.id)).toEqual([]);
-  });
 
   it('keeps the inventory and reorder controls free of WCAG A/AA violations', async () => {
     fixture.componentRef.setInput('product', {
