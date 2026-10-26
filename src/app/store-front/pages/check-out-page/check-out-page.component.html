@@ -236,7 +236,7 @@
           [disabled]="!canPlaceOrder()"
           class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          @if (isCreatingSell()) {
+          @if (isPlacingOrder()) {
             <!-- Spinner -->
             <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
               <circle
@@ -275,13 +275,13 @@
         </button>
 
         <!-- Disabled reason hint -->
-        @if (!canPlaceOrder() && !isCreatingSell()) {
+        @if (!canPlaceOrder() && !isPlacingOrder()) {
           <p class="mt-2 text-center text-xs text-gray-400">
             @if (cartStore.cartLineCount() === 0) {
               Tu carrito está vacío.
             } @else if (!selectedAddress()) {
               Selecciona una dirección de envío para continuar.
-            } @else if (!boletaFile()) {
+            } @else if (!receiptFile()) {
               Sube el comprobante de pago para continuar.
             } @else if (nitError()) {
               Corrige el NIT para continuar.
@@ -291,11 +291,17 @@
 
         <!-- Checkout error banner -->
         @if (checkoutError()) {
-          <p
-            class="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-inset ring-red-200"
+          <div
+            role="alert"
+            class="mt-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800 ring-1 ring-inset ring-red-200"
           >
-            {{ checkoutError() }}
-          </p>
+            <p>{{ checkoutError() }}</p>
+            @if (cartNeedsReview()) {
+              <a routerLink="/cart" class="mt-1 inline-block font-semibold underline">
+                Revisar mi carrito
+              </a>
+            }
+          </div>
         }
 
         <!-- Trust signals -->

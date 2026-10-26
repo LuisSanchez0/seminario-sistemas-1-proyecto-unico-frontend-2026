@@ -31,7 +31,7 @@ export const storeFrontRoutes: Routes = [
         canActivate: [AuthenticatedGuard],
       },
       {
-        path: 'my-orders/:sellId',
+        path: 'my-orders/:orderId',
         component: OrderPage,
         canActivate: [AuthenticatedGuard],
       },

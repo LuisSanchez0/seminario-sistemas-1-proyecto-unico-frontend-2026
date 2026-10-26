@@ -54,6 +54,12 @@ export function apiErrorMessage(error: unknown, fallback = 'Ocurrió un error in
       body.msg.trim()
     )
       return body.msg;
+    if (typeof body === 'object' && body !== null && 'errors' in body && Array.isArray(body.errors)) {
+      const messages = body.errors
+        .filter((entry: unknown): entry is { msg: string } => typeof entry === 'object' && entry !== null && 'msg' in entry && typeof entry.msg === 'string')
+        .map(entry => entry.msg);
+      if (messages.length) return messages.join(' ');
+    }
   }
   return fallback;
 }

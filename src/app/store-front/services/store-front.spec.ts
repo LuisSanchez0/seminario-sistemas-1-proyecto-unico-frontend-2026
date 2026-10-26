@@ -17,7 +17,7 @@ describe('Cosmetics cart store', () => {
   beforeEach(() => {
     localStorage.clear();
     user.set(null);
-    localStorage.setItem('prowear_guest_id', 'test-guest');
+    localStorage.setItem('lumina_guest_id', 'test-guest');
     TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: { user } }] });
   });
   function start() {
@@ -88,5 +88,24 @@ describe('Cosmetics cart store', () => {
     expect(JSON.parse(localStorage.getItem('cart_cosmetics_v1_guest_test-guest')!)).toEqual([
       { product, quantity: 3 },
     ]);
+  });
+  it('adopts the legacy guest id once so existing guest carts are not lost', () => {
+    localStorage.clear();
+    localStorage.setItem('prowear_guest_id', 'old-guest');
+    localStorage.setItem(
+      'cart_cosmetics_v1_guest_old-guest',
+      JSON.stringify([{ product, quantity: 1 }]),
+    );
+    start();
+    TestBed.tick();
+    expect(store.cartItems()).toEqual([{ product, quantity: 1 }]);
+    expect(localStorage.getItem('lumina_guest_id')).toBe('old-guest');
+    expect(localStorage.getItem('prowear_guest_id')).toBeNull();
+  });
+  it('creates a fresh guest id under the Lumina key when none exists', () => {
+    localStorage.clear();
+    start();
+    expect(localStorage.getItem('lumina_guest_id')).toBeTruthy();
+    expect(localStorage.getItem('prowear_guest_id')).toBeNull();
   });
 });

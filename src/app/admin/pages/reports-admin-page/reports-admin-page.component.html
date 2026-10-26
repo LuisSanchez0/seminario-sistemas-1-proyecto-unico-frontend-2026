@@ -1,0 +1,160 @@
+<div class="space-y-6">
+  <header>
+    <h1 class="text-3xl font-bold">Reportes</h1>
+    <p class="mt-2">{{ descriptions[type()] }} Las fechas usan la hora de Guatemala.</p>
+  </header>
+
+  <nav aria-label="Tipo de reporte">
+    <ul class="flex flex-wrap gap-2">
+      @for (item of types; track item) {
+        <li>
+          <a
+            [routerLink]="['/admin/reports', item]"
+            class="btn"
+            [class.btn-primary]="item === type()"
+            [attr.aria-current]="item === type() ? 'page' : null"
+            >{{ labels[item] }}</a
+          >
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <app-report-filters
+    [type]="type()"
+    [values]="filters()"
+    [brands]="brands()"
+    (applied)="applyFilters($event)"
+  />
+
+  @if (reportResource.error()) {
+    <div role="alert" class="alert alert-error">
+      <span>{{ apiErrorMessage(reportResource.error(), 'No se pudo generar el reporte.') }}</span>
+      <button type="button" class="btn btn-sm" (click)="reportResource.reload()">Reintentar</button>
+    </div>
+  } @else if (!current()) {
+    <div class="space-y-3" aria-busy="true" aria-label="Cargando reporte">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="skeleton h-20 w-full"></div>
+      }
+    </div>
+  } @else {
+    @let data = current()!;
+    @let report = data.report;
+    <section class="space-y-6" [attr.aria-busy]="reportResource.isLoading()" aria-labelledby="report-title">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h2 id="report-title" class="text-2xl font-semibold">{{ report.title }}</h2>
+          <dl class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm" aria-label="Filtros aplicados">
+            @for (filter of report.filters; track filter.label) {
+              <div class="flex gap-1">
+                <dt class="font-medium">{{ filter.label }}:</dt>
+                <dd>{{ filter.value }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+        <div class="flex flex-wrap gap-3" role="group" aria-label="Exportar reporte">
+          @for (format of formats; track format) {
+            <button
+              type="button"
+              class="btn btn-outline"
+              [disabled]="!!exporting() || !canExport()"
+              [attr.aria-busy]="exporting() === format"
+              (click)="export(format)"
+            >
+              @if (exporting() === format) {
+                <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
+                {{ exportLabels[format].busy }}
+              } @else {
+                {{ exportLabels[format].idle }}
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <p class="text-sm">
+        El archivo incluye todas las filas de los filtros aplicados ({{ data.count }}
+        {{ data.count === 1 ? 'fila' : 'filas' }}), no solo la página visible.
+        @if (data.count === 0) {
+          No hay datos para exportar.
+        }
+      </p>
+
+      <div role="status" class="text-sm">
+        @if (exportDone()) {
+          <p class="text-success-content bg-success/20 rounded-lg px-3 py-2">{{ exportDone() }}</p>
+        }
+      </div>
+      @if (exportError()) {
+        <div role="alert" class="alert alert-error">
+          <span>{{ exportError() }}</span>
+        </div>
+      }
+
+      @if (report.kpis.length) {
+        <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" aria-label="Indicadores del reporte">
+          @for (kpi of report.kpis; track kpi.key) {
+            <li class="card bg-base-100 border border-base-300 p-4">
+              <p class="text-sm">{{ kpi.label }}</p>
+              <p class="mt-1 text-2xl font-bold break-words">{{ kpi.value | reportValue: kpi.type }}</p>
+            </li>
+          }
+        </ul>
+      }
+
+      @for (breakdown of report.breakdowns; track breakdown.key) {
+        @if (breakdown.rows.length) {
+          <div class="space-y-2">
+            <h3 class="text-lg font-semibold">{{ breakdown.title }}</h3>
+            <app-report-table
+              [caption]="breakdown.title"
+              [columns]="breakdown.columns"
+              [rows]="breakdown.rows"
+              [totals]="breakdown.totals"
+            />
+          </div>
+        }
+      }
+
+      <div class="space-y-2">
+        <h3 class="text-lg font-semibold">Detalle</h3>
+        @if (report.rows.length === 0) {
+          <div class="card bg-base-100 border border-base-300 p-10 text-center">
+            <p class="font-semibold">No se encontraron registros para los filtros seleccionados.</p>
+            <p class="mt-1 text-sm">Cambia el período o los filtros y vuelve a aplicarlos.</p>
+          </div>
+        } @else {
+          <app-report-table
+            [caption]="'Detalle del reporte de ' + labels[type()].toLowerCase()"
+            [columns]="report.columns"
+            [rows]="report.rows"
+            [totals]="report.totals"
+            totalsLabel="Totales del reporte"
+          />
+          <p class="text-sm">
+            Mostrando {{ data.offset + 1 }} a {{ data.offset + report.rows.length }} de
+            {{ data.count }}. Los totales corresponden a todas las filas filtradas.
+          </p>
+          @if (data.pages > 1) {
+            <div class="flex justify-center">
+              <app-pagination [pages]="data.pages" [currentPage]="page()" />
+            </div>
+          }
+        }
+      </div>
+
+      @if (report.notes.length) {
+        <section class="card bg-base-100 border border-base-300 p-5" aria-labelledby="report-notes">
+          <h3 id="report-notes" class="font-semibold">Definiciones</h3>
+          <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+            @for (note of report.notes; track note) {
+              <li>{{ note }}</li>
+            }
+          </ul>
+        </section>
+      }
+    </section>
+  }
+</div>

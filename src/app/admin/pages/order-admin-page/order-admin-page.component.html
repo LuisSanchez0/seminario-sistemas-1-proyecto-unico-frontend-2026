@@ -1,0 +1,238 @@
+<div class="space-y-6">
+  <a routerLink="/admin/orders" class="link link-hover inline-flex items-center gap-1 text-sm">
+    <span aria-hidden="true">←</span> Volver a pedidos
+  </a>
+
+  @if (orderResource.isLoading() && !order()) {
+    <div class="space-y-3" aria-busy="true" aria-label="Cargando pedido">
+      <div class="skeleton h-24 w-full"></div>
+      <div class="skeleton h-64 w-full"></div>
+    </div>
+  } @else if (orderResource.error() && !order()) {
+    <div role="alert" class="alert alert-error">
+      <span>{{ apiErrorMessage(orderResource.error(), 'No se pudo cargar el pedido.') }}</span>
+      <button type="button" class="btn btn-sm" (click)="orderResource.reload()">Reintentar</button>
+    </div>
+  } @else if (order(); as o) {
+    <header class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h1 class="font-mono text-xl font-bold break-all sm:text-3xl">{{ o.orderCode }}</h1>
+        <p class="mt-2">{{ o.createdAt | date: "d 'de' MMMM y, h:mm a" }}</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <app-order-status-badge kind="payment" [value]="o.paymentState" />
+        <app-order-status-badge kind="order" [value]="o.orderState" />
+      </div>
+    </header>
+
+    @if (o.cancellationReason) {
+      <p role="status" class="alert">Motivo: {{ o.cancellationReason }}</p>
+    }
+
+    <div class="grid gap-6 lg:grid-cols-3">
+      <div class="space-y-6 lg:col-span-2">
+        <!-- Productos y envío -->
+        <section class="card bg-base-100 border border-base-300" aria-labelledby="items-heading">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 p-4">
+            <h2 id="items-heading" class="text-xl font-bold">Productos y envío</h2>
+            @if (bulkTarget(); as target) {
+              <button type="button" class="btn btn-sm btn-primary" [disabled]="shippingBusy()" (click)="advanceAll()">
+                Marcar todos como {{ shippingLabels[target] }}
+              </button>
+            }
+          </div>
+
+          @if (o.paymentState === 'EN_ESPERA_DE_PAGO') {
+            <p class="mx-4 mt-4 text-sm">
+              Confirma el pago para poder preparar y enviar los productos.
+            </p>
+          } @else if (!canShip()) {
+            <p class="mx-4 mt-4 text-sm">Este pedido ya no admite cambios de envío.</p>
+          }
+          @if (shippingError()) {
+            <p role="alert" class="alert alert-error mx-4 mt-4">{{ shippingError() }}</p>
+          }
+
+          <ul class="divide-y divide-base-300">
+            @for (item of o.items; track item.id) {
+              <li class="p-4 space-y-3">
+                <div class="flex gap-4">
+                  @if (item.imageUrl) {
+                    <img [src]="item.imageUrl" [alt]="item.title" class="h-16 w-16 shrink-0 rounded-lg object-cover bg-base-200" />
+                  } @else {
+                    <span class="h-16 w-16 shrink-0 rounded-lg bg-base-200"></span>
+                  }
+                  <div class="min-w-0 flex-1">
+                    @if (item.brandName) {
+                      <p class="text-xs uppercase tracking-wide">{{ item.brandName }}</p>
+                    }
+                    <p class="font-medium break-words">{{ item.title }}</p>
+                    <p class="text-sm">
+                      {{ item.quantity }} × {{ item.unitPrice | currency: 'GTQ' : 'symbol-narrow' }} =
+                      <strong>{{ item.subtotal | currency: 'GTQ' : 'symbol-narrow' }}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <app-order-status-badge kind="shipping" [value]="item.shippingStatus" />
+                  @if (canShip() && nextShippingStatus(item.shippingStatus); as next) {
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline"
+                      [disabled]="shippingBusy()"
+                      (click)="advance(item)"
+                    >
+                      Marcar como {{ shippingLabels[next] }}
+                    </button>
+                  }
+                </div>
+                @if (item.shippingStatusHistory.length > 1) {
+                  <details class="text-sm">
+                    <summary class="cursor-pointer">Historial</summary>
+                    <ol class="mt-2 space-y-1">
+                      @for (entry of item.shippingStatusHistory; track $index) {
+                        <li>
+                          {{ shippingLabels[entry.status] }} —
+                          {{ entry.changedAt | date: 'd MMM y, h:mm a' }}
+                        </li>
+                      }
+                    </ol>
+                  </details>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+
+        <!-- Cliente y dirección -->
+        <section class="card bg-base-100 border border-base-300 p-4 space-y-4" aria-labelledby="customer-heading">
+          <h2 id="customer-heading" class="text-xl font-bold">Cliente y entrega</h2>
+          <div class="grid gap-4 sm:grid-cols-2 text-sm">
+            <div>
+              <h3 class="font-semibold">Cliente</h3>
+              <p>{{ o.buyer?.name ?? 'Cliente eliminado' }}</p>
+              @if (o.buyer) {
+                <p class="break-all">{{ o.buyer.email }}</p>
+              }
+              <p class="mt-2">NIT: {{ o.nit }}</p>
+            </div>
+            <div>
+              <h3 class="font-semibold">Dirección de envío</h3>
+              <address class="not-italic">
+                {{ o.shippingAddress.full_address }}<br />
+                @if (o.shippingAddress.street) {
+                  {{ o.shippingAddress.street }}<br />
+                }
+                {{ o.shippingAddress.municipality }}, {{ o.shippingAddress.department }}<br />
+                Tel. {{ o.shippingAddress.phoneNumber }}
+              </address>
+            </div>
+          </div>
+          @if (o.notes) {
+            <p class="text-sm"><strong>Notas:</strong> {{ o.notes }}</p>
+          }
+        </section>
+      </div>
+
+      <aside class="space-y-6">
+        <!-- Pago -->
+        <section class="card bg-base-100 border border-base-300 p-4 space-y-4" aria-labelledby="payment-heading">
+          <h2 id="payment-heading" class="text-xl font-bold">Pago</h2>
+
+          <dl class="space-y-1 text-sm">
+            <div class="flex justify-between"><dt>Subtotal</dt><dd>{{ o.subtotal | currency: 'GTQ' : 'symbol-narrow' }}</dd></div>
+            <div class="flex justify-between"><dt>Envío</dt><dd>{{ o.shippingCost | currency: 'GTQ' : 'symbol-narrow' }}</dd></div>
+            <div class="flex justify-between border-t border-base-300 pt-2 text-base font-bold">
+              <dt>Total</dt><dd>{{ o.total | currency: 'GTQ' : 'symbol-narrow' }}</dd>
+            </div>
+          </dl>
+
+          <div>
+            <h3 class="font-semibold text-sm mb-2">Comprobante</h3>
+            @if (o.paymentReceipt) {
+              @if (o.paymentReceipt.url) {
+                <a [href]="o.paymentReceipt.url" target="_blank" rel="noopener noreferrer" class="block">
+                  <img
+                    [src]="o.paymentReceipt.url"
+                    alt="Comprobante de pago del cliente"
+                    class="max-h-64 w-full rounded-lg border border-base-300 object-contain bg-base-200"
+                  />
+                  <span class="mt-1 inline-block text-sm link">Abrir en una pestaña nueva</span>
+                </a>
+              } @else {
+                <p class="text-sm">El comprobante existe pero no se pudo cargar. Intenta recargar.</p>
+              }
+              <p class="mt-1 text-xs">Subido {{ o.paymentReceipt.uploadedAt | date: 'd MMM y, h:mm a' }}</p>
+            } @else {
+              <p class="text-sm">El cliente aún no subió su comprobante.</p>
+            }
+          </div>
+
+          @if (o.paymentReference) {
+            <p class="text-sm"><strong>Referencia:</strong> {{ o.paymentReference }}</p>
+          }
+          @if (o.paidAt) {
+            <p class="text-sm">Pago confirmado el {{ o.paidAt | date: 'd MMM y, h:mm a' }}</p>
+          }
+
+          @if (awaitingPayment()) {
+            <div>
+              <label for="payment-reference" class="block text-sm font-medium mb-1">
+                Referencia de pago (opcional con comprobante)
+              </label>
+              <input
+                id="payment-reference"
+                type="text"
+                class="input input-bordered w-full"
+                maxlength="120"
+                [formControl]="paymentReference"
+              />
+            </div>
+            <button type="button" class="btn btn-success w-full" [disabled]="!canConfirmPayment()" (click)="openAction('confirm')">
+              Confirmar pago
+            </button>
+            @if (!canConfirmPayment()) {
+              <p class="text-xs">Necesitas el comprobante del cliente o una referencia de pago.</p>
+            }
+            <button type="button" class="btn btn-outline btn-error w-full" (click)="openAction('cancel')">
+              Cancelar pedido
+            </button>
+          }
+
+          @if (canRefund()) {
+            <button type="button" class="btn btn-outline btn-error w-full" (click)="openAction('refund')">
+              Reembolsar pedido
+            </button>
+          }
+          @if (refundBlocked()) {
+            <p class="text-xs">
+              Ya hay productos enviados: el reembolso requiere un proceso de devolución.
+            </p>
+          }
+        </section>
+      </aside>
+    </div>
+  }
+
+  <app-confirm-dialog
+    [title]="copy().title"
+    [message]="copy().message"
+    [confirmLabel]="copy().confirmLabel"
+    [confirmClass]="copy().confirmClass"
+    cancelLabel="Volver"
+    [busy]="busy()"
+    [error]="dialogError()"
+    (confirmed)="runAction()"
+  >
+    @if (copy().askReason) {
+      <label for="action-reason" class="block text-sm font-medium mb-1">Motivo (opcional)</label>
+      <textarea
+        id="action-reason"
+        class="textarea textarea-bordered w-full"
+        rows="3"
+        maxlength="300"
+        [formControl]="reason"
+      ></textarea>
+    }
+  </app-confirm-dialog>
+</div>

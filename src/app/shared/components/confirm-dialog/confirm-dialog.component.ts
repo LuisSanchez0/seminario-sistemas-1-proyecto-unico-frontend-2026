@@ -16,23 +16,24 @@ let nextConfirmationId = 0;
       <div class="modal-box max-h-[85dvh] overflow-y-auto">
         <h2 [id]="titleId" class="text-xl font-bold">{{ title() }}</h2>
         <p class="py-4">{{ message() }}</p>
+        <ng-content />
         @if (error()) {
           <p role="alert" class="alert alert-error">{{ error() }}</p>
         }
         <div class="modal-action flex-wrap">
           <button type="button" class="btn" [disabled]="busy()" (click)="close()" autofocus>
-            Cancelar
+            {{ cancelLabel() }}
           </button>
           <button
             type="button"
-            class="btn btn-error"
+            [class]="confirmClass()"
             [disabled]="busy()"
             (click)="confirmed.emit()"
           >
             @if (busy()) {
               <span class="loading loading-spinner loading-sm" aria-hidden="true"></span>
             }
-            Eliminar
+            {{ confirmLabel() }}
           </button>
         </div>
       </div>
@@ -43,6 +44,10 @@ export class ConfirmDialogComponent {
   readonly titleId = `confirmation-title-${nextConfirmationId++}`;
   title = input('Confirmar eliminación');
   message = input('');
+  /** Texto y estilo del botón de confirmación; por defecto sigue siendo una eliminación. */
+  confirmLabel = input('Eliminar');
+  cancelLabel = input('Cancelar');
+  confirmClass = input('btn btn-error');
   busy = input(false);
   error = input('');
   confirmed = output();

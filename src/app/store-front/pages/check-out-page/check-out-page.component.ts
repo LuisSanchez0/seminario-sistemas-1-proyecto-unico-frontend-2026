@@ -9,67 +9,28 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, map, of, switchMap, finalize, throwError } from 'rxjs';
+import { catchError, finalize, map, of, switchMap } from 'rxjs';
 import { StoreFront } from '../../services/store-front';
 import { AddressesService } from '../../services/addresses.service';
-import { NotificationService } from '../../../shared/services/notification.service';
+import { apiErrorMessage, NotificationService } from '../../../shared/services/notification.service';
 import {
   Address,
   CreateAddressPayload,
   UpdateAddressPayload,
 } from '../../interfaces/addresses.interface';
 import { ProductService } from '../../../products/services/product.service';
+import { OrderService } from '../../../orders/services/order.service';
+import { CreateOrderPayload } from '../../../orders/interfaces/order.interface';
 
 import { CheckoutAddressSelectorComponent } from './components/checkout-address-selector/checkout-address-selector.component';
 import { CheckoutPaymentCardComponent } from './components/checkout-payment-card/checkout-payment-card.component';
 import { CheckoutOrderSummaryComponent } from './components/checkout-order-summary/checkout-order-summary.component';
 
-// ── Local error discriminants ──────────────────────────────────────────────────
-
-/** Error thrown when the sell was already created but one or more uploads failed. */
-interface UploadFailureError {
-  isSellCreated: true;
-  msg: string;
-  originalError?: unknown;
-}
-
-/** Error thrown when sell + uploads succeeded but the confirmation email failed. */
-interface EmailFailureError {
-  isEmailFailure: true;
-  msg: string;
-  originalError?: unknown;
-}
-
-/** Error thrown by the backend during sell creation. */
-interface SellCreationError {
-  error?: { msg?: string };
-}
-
-function isUploadFailureError(err: unknown): err is UploadFailureError {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'isSellCreated' in err &&
-    (err as UploadFailureError).isSellCreated === true
-  );
-}
-
-function isEmailFailureError(err: unknown): err is EmailFailureError {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'isEmailFailure' in err &&
-    (err as EmailFailureError).isEmailFailure === true
-  );
-}
-
-/** Returns true when the backend rejects the email because it was already sent. */
-function isDuplicateEmailError(msg: string): boolean {
-  const lower = msg.toLowerCase();
-  return lower.includes('ya fue enviado') || lower.includes('already sent');
-}
-
 /** Valid NIT: "CF" (case-insensitive) OR digits with optional hyphen and digit/K suffix. */
+function newCheckoutKey(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 const NIT_RE = /^(CF|[0-9]+-?[0-9K])$/i;
 
 @Component({
@@ -88,6 +49,7 @@ export class CheckOutPageComponent implements OnInit {
   private readonly addressService = inject(AddressesService);
   private readonly notifications = inject(NotificationService);
   private readonly productService = inject(ProductService);
+  private readonly orderService = inject(OrderService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -102,13 +64,20 @@ export class CheckOutPageComponent implements OnInit {
   // ── Payment state ──────────────────────────────────────────────────────────
 
   readonly receiptImageBase64 = signal<string | null>(null);
-  readonly boletaFile = signal<File | null>(null);
+  readonly receiptFile = signal<File | null>(null);
 
   // ── Checkout state ─────────────────────────────────────────────────────────
 
-  readonly isCreatingSell = signal(false);
+  readonly isPlacingOrder = signal(false);
   readonly checkoutError = signal<string | null>(null);
-  readonly checkoutSuccess = signal(false);
+  /** `true` cuando el error exige revisar el carrito (stock o precios cambiaron). */
+  readonly cartNeedsReview = signal(false);
+
+  /**
+   * Identifica este intento de checkout. Si la respuesta se pierde y el cliente reintenta, el
+   * servidor devuelve el pedido ya creado en vez de duplicarlo.
+   */
+  private readonly checkoutKey = newCheckoutKey();
 
   // ── Billing / NIT state ────────────────────────────────────────────────────
 
@@ -135,11 +104,11 @@ export class CheckOutPageComponent implements OnInit {
 
   readonly canPlaceOrder = computed(
     () =>
-      !this.isCreatingSell() &&
+      !this.isPlacingOrder() &&
       !this.isSaving() &&
       this.cartStore.cartLineCount() > 0 &&
       this.selectedAddress() !== null &&
-      this.boletaFile() !== null &&
+      this.receiptFile() !== null &&
       this.nitError() === null,
   );
 
@@ -228,7 +197,7 @@ export class CheckOutPageComponent implements OnInit {
 
   onReceiptChange(event: { base64: string; file: File } | null): void {
     this.receiptImageBase64.set(event?.base64 ?? null);
-    this.boletaFile.set(event?.file ?? null);
+    this.receiptFile.set(event?.file ?? null);
   }
 
   onWantsInvoiceChange(checked: boolean): void {
@@ -243,7 +212,7 @@ export class CheckOutPageComponent implements OnInit {
   onPlaceOrder(): void {
     const address = this.selectedAddress();
     const cartItems = this.cartStore.cartItems();
-    const boletaFile = this.boletaFile();
+    const receiptFile = this.receiptFile();
 
     if (!address) {
       this.notifications.error('Dirección requerida', 'Selecciona una dirección de envío.');
@@ -255,7 +224,7 @@ export class CheckOutPageComponent implements OnInit {
       return;
     }
 
-    if (!boletaFile) {
+    if (!receiptFile) {
       this.notifications.error(
         'Comprobante requerido',
         'Sube el comprobante de pago antes de confirmar.',
@@ -269,7 +238,7 @@ export class CheckOutPageComponent implements OnInit {
       return;
     }
 
-    if (this.isCreatingSell()) return;
+    if (this.isPlacingOrder()) return;
     if (
       cartItems.some(
         (item) =>
@@ -282,78 +251,61 @@ export class CheckOutPageComponent implements OnInit {
       return;
     }
 
-    this.isCreatingSell.set(true);
+    this.isPlacingOrder.set(true);
     this.checkoutError.set(null);
+    this.cartNeedsReview.set(false);
 
-    
+    // Solo se envían ids y cantidades: precios, envío, total y estados los calcula el servidor.
+    const payload: CreateOrderPayload = {
+      items: cartItems.map((item) => ({ product: item.product.id, quantity: item.quantity })),
+      shippingAddress: address._id,
+      paymentMethod: 'TRANSFERENCIA',
+      nit: this.wantsInvoice() ? this.nit().trim() || 'CF' : 'CF',
+      checkoutKey: this.checkoutKey,
+    };
 
-    // this.sellService
-    //   .createSell(payload)
-    //   .pipe(
-    //     switchMap((response) => {
-    //       const sell = response.sell;
-    //       const sellId = sell.id;
-
-    //       return this.sellService.uploadSellBoleta(sellId, boletaFile).pipe(
-    //         catchError((uploadErr) =>
-    //           throwError((): UploadFailureError => ({
-    //             isSellCreated: true,
-    //             msg: 'La venta fue creada, pero hubo un error subiendo las imágenes.',
-    //             originalError: uploadErr,
-    //           })),
-    //         ),
-    //         switchMap(() =>
-    //           this.sellService.sendConfirmationEmail(sellId).pipe(
-    //             catchError((emailErr) => {
-    //               const backendMsg: string = (emailErr as SellCreationError)?.error?.msg ?? '';
-    //               // Duplicate email → treat as success; the sell already has its email.
-    //               if (isDuplicateEmailError(backendMsg)) {
-    //                 return of<SendConfirmationEmailResponse>({ ok: true, msg: backendMsg });
-    //               }
-    //               return throwError((): EmailFailureError => ({
-    //                 isEmailFailure: true,
-    //                 msg: 'La venta fue creada correctamente, pero no se pudo enviar el correo de confirmación.',
-    //                 originalError: emailErr,
-    //               }));
-    //             }),
-    //           ),
-    //         ),
-    //         map((): Sell => sell),
-    //       );
-    //     }),
-    //     finalize(() => this.isCreatingSell.set(false)),
-    //     takeUntilDestroyed(this.destroyRef),
-    //   )
-    //   .subscribe({
-    //     next: (sell: Sell) => {
-    //       this.productService.clearProductsCache();
-    //       this.cartStore.clearCart();
-    //       this.checkoutSuccess.set(true);
-    //       const orderRef = sell.orderCode ?? sell.id;
-    //       this.notifications.success(
-    //         '¡Pedido registrado!',
-    //         `Tu pedido fue creado exitosamente. Código de orden: ${orderRef}`,
-    //       );
-    //       this.router.navigate(['/my-orders', sell.id]);
-    //     },
-    //     error: (err: unknown) => {
-    //       if (isEmailFailureError(err)) {
-    //         // Sell + uploads are OK; only the email step failed.
-    //         // Do NOT clear the cart — the sell exists and can be reprocessed.
-    //         this.checkoutError.set(err.msg);
-    //         this.notifications.error('Error al enviar correo', err.msg);
-    //       } else if (isUploadFailureError(err)) {
-    //         this.checkoutError.set(err.msg);
-    //         this.notifications.error('Error al subir imágenes', err.msg);
-    //       } else {
-    //         const msg =
-    //           (err as SellCreationError)?.error?.msg ??
-    //           'Ocurrió un error al procesar tu pedido. Intenta nuevamente.';
-    //         this.checkoutError.set(msg);
-    //         this.notifications.error('Error al procesar pedido', msg);
-    //       }
-    //     },
-    //   });
+    this.orderService
+      .createOrder(payload)
+      .pipe(
+        // Si el comprobante falla el pedido ya existe: no se pierde, el cliente lo reenvía desde el detalle.
+        switchMap(({ order }) =>
+          this.orderService.uploadPaymentReceipt(order.id, receiptFile).pipe(
+            map(() => ({ order, receiptFailed: false })),
+            catchError(() => of({ order, receiptFailed: true })),
+          ),
+        ),
+        finalize(() => this.isPlacingOrder.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ order, receiptFailed }) => {
+          this.productService.clearProductsCache();
+          this.cartStore.clearCart();
+          if (receiptFailed) {
+            this.notifications.info(
+              'Pedido creado',
+              'No pudimos subir tu comprobante. Súbelo desde el detalle del pedido.',
+              6000,
+            );
+          } else {
+            this.notifications.success('¡Pedido registrado!', `Código de pedido: ${order.orderCode}`);
+          }
+          void this.router.navigate(['/my-orders', order.id], { queryParams: { placed: 1 } });
+        },
+        error: (error: { status?: number }) => {
+          const message = apiErrorMessage(
+            error,
+            'Ocurrió un error al procesar tu pedido. Intenta nuevamente.',
+          );
+          this.checkoutError.set(message);
+          // 409: el stock cambió. Se descarta la caché para que el carrito se revalide con datos reales.
+          if (error?.status === 409) {
+            this.cartNeedsReview.set(true);
+            this.productService.clearProductsCache();
+          }
+          this.notifications.error('No se pudo crear el pedido', message);
+        },
+      });
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────

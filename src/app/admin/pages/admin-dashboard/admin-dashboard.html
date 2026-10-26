@@ -1,0 +1,207 @@
+<div class="space-y-8">
+  <header class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold">Panel de administración</h1>
+      @if (data(); as d) {
+        <p class="mt-2">
+          {{ d.period.label }}: {{ d.period.text }} · hora de Guatemala · importes en quetzales (GTQ)
+        </p>
+      } @else {
+        <p class="mt-2">Resumen de ventas, pedidos pendientes e inventario.</p>
+      }
+    </div>
+  </header>
+
+  <section aria-labelledby="period-title" class="card bg-base-100 border border-base-300 p-5 space-y-4">
+    <h2 id="period-title" class="font-semibold">Período de ventas</h2>
+    <div class="flex flex-wrap gap-2" role="group" aria-label="Período de ventas">
+      @for (item of periods; track item.value) {
+        <button
+          type="button"
+          class="btn"
+          [class.btn-primary]="period() === item.value"
+          [attr.aria-pressed]="period() === item.value"
+          (click)="select(item.value)"
+        >
+          {{ item.label }}
+        </button>
+      }
+    </div>
+    @if (period() === 'custom') {
+      <form class="flex flex-wrap items-end gap-4" (submit)="$event.preventDefault(); applyRange()" aria-label="Rango personalizado">
+        <div>
+          <label for="dash-start" class="block font-medium mb-2">Desde</label>
+          <input id="dash-start" type="date" class="input input-bordered" [value]="draftStart()" (input)="onDate('start', $event)" />
+        </div>
+        <div>
+          <label for="dash-end" class="block font-medium mb-2">Hasta</label>
+          <input id="dash-end" type="date" class="input input-bordered" [value]="draftEnd()" (input)="onDate('end', $event)" />
+        </div>
+        <button type="submit" class="btn btn-primary" [disabled]="!!rangeError()">Aplicar</button>
+      </form>
+      @if (rangeError()) {
+        <p role="alert" class="text-error text-sm">{{ rangeError() }}</p>
+      }
+    }
+  </section>
+
+  @if (dashboard.error()) {
+    <div role="alert" class="alert alert-error">
+      <span>{{ apiErrorMessage(dashboard.error(), 'No se pudo cargar el panel.') }}</span>
+      <button type="button" class="btn btn-sm" (click)="dashboard.reload()">Reintentar</button>
+    </div>
+  } @else if (!data()) {
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Cargando panel">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="skeleton h-24 w-full"></div>
+      }
+    </div>
+  } @else {
+    @let d = data()!;
+    <div class="space-y-8" [attr.aria-busy]="dashboard.isLoading()">
+      <section aria-labelledby="sales-title" class="space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="sales-title" class="text-xl font-semibold">Ventas del período</h2>
+          <a
+            class="btn btn-sm btn-outline"
+            routerLink="/admin/reports/sales"
+            [queryParams]="reportDates()"
+            >Ver reporte de ventas</a
+          >
+        </div>
+        <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Indicadores de ventas">
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">Pedidos del período</p>
+            <p class="mt-1 text-3xl font-bold" data-kpi="orders">{{ d.sales.orders | number }}</p>
+          </li>
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">Ventas cobradas</p>
+            <p class="mt-1 text-3xl font-bold" data-kpi="collectedOrders">{{ d.sales.collectedOrders | number }}</p>
+          </li>
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">Ingresos cobrados</p>
+            <p class="mt-1 text-3xl font-bold break-words" data-kpi="revenue">{{ d.sales.revenue | currency: 'GTQ' : 'symbol-narrow' }}</p>
+          </li>
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">Ticket promedio</p>
+            <p class="mt-1 text-3xl font-bold break-words" data-kpi="averageTicket">{{ d.sales.averageTicket | currency: 'GTQ' : 'symbol-narrow' }}</p>
+          </li>
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">Unidades cobradas</p>
+            <p class="mt-1 text-3xl font-bold" data-kpi="units">{{ d.sales.units | number }}</p>
+          </li>
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">Pedidos entregados</p>
+            <p class="mt-1 text-3xl font-bold" data-kpi="completedOrders">{{ d.sales.completedOrders | number }}</p>
+          </li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="pending-title" class="space-y-3">
+        <h2 id="pending-title" class="text-xl font-semibold">Pendiente ahora</h2>
+        <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" aria-label="Pedidos pendientes">
+          <li>
+            <a class="card bg-base-100 border border-base-300 p-4 hover:border-primary h-full" routerLink="/admin/orders" [queryParams]="{ paymentState: 'EN_ESPERA_DE_PAGO' }">
+              <span class="text-sm">Pagos por confirmar</span>
+              <span class="mt-1 text-3xl font-bold" data-kpi="pendingPayment">{{ d.current.pendingPayment | number }}</span>
+              <span class="text-sm">{{ d.current.awaitingVerification | number }} con comprobante</span>
+            </a>
+          </li>
+          <li>
+            <a class="card bg-base-100 border border-base-300 p-4 hover:border-primary h-full" routerLink="/admin/orders" [queryParams]="{ paymentState: 'PAGO_REALIZADO', orderState: 'PENDIENTE' }">
+              <span class="text-sm">Por preparar</span>
+              <span class="mt-1 text-3xl font-bold" data-kpi="toPrepare">{{ d.current.toPrepare | number }}</span>
+              <span class="text-sm">Pagados, sin iniciar</span>
+            </a>
+          </li>
+          <li>
+            <a class="card bg-base-100 border border-base-300 p-4 hover:border-primary h-full" routerLink="/admin/orders" [queryParams]="{ paymentState: 'PAGO_REALIZADO', orderState: 'EN_PROCESO' }">
+              <span class="text-sm">En preparación</span>
+              <span class="mt-1 text-3xl font-bold" data-kpi="inPreparation">{{ d.current.inPreparation | number }}</span>
+              <span class="text-sm">Pagados, preparando</span>
+            </a>
+          </li>
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">En camino</p>
+            <p class="mt-1 text-3xl font-bold" data-kpi="shipped">{{ d.current.shipped | number }}</p>
+            <p class="text-sm">Enviados total o parcialmente</p>
+          </li>
+          <li class="card bg-base-100 border border-base-300 p-4">
+            <p class="text-sm">Clientes activos</p>
+            <p class="mt-1 text-3xl font-bold" data-kpi="customers">{{ d.current.customers | number }}</p>
+            <p class="text-sm">Cuentas de cliente</p>
+          </li>
+        </ul>
+      </section>
+
+      <div class="grid gap-6 lg:grid-cols-2">
+        <section aria-labelledby="stock-title" class="card bg-base-100 border border-base-300 p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="stock-title" class="text-xl font-semibold">Inventario por atender</h2>
+            <a class="btn btn-sm btn-outline" routerLink="/admin/reports/inventory">Ver inventario</a>
+          </div>
+          <p class="text-sm">
+            <a class="link" routerLink="/admin/reports/inventory" [queryParams]="{ stockStatus: 'low' }" data-kpi="lowStock"
+              >{{ d.current.lowStock | number }} con stock bajo</a
+            >
+            (hasta {{ d.current.lowStockThreshold }} unidades) ·
+            <a class="link" routerLink="/admin/reports/inventory" [queryParams]="{ stockStatus: 'out' }" data-kpi="outOfStock"
+              >{{ d.current.outOfStock | number }} agotados</a
+            >
+          </p>
+          @if (d.lowestStock.length === 0) {
+            <p>No hay productos con stock bajo ni agotados.</p>
+          } @else {
+            <ul class="divide-y divide-base-300" aria-label="Productos con menos existencias">
+              @for (product of d.lowestStock; track product.id) {
+                <li class="flex items-center justify-between gap-3 py-2">
+                  <a class="link link-hover min-w-0 break-words" [routerLink]="['/admin/products', product.id]">{{ product.title }}</a>
+                  <span class="whitespace-nowrap font-semibold">
+                    {{ product.stock <= 0 ? 'Agotado' : product.stock + (product.stock === 1 ? ' unidad' : ' unidades') }}
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section aria-labelledby="top-title" class="card bg-base-100 border border-base-300 p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="top-title" class="text-xl font-semibold">Más vendidos del período</h2>
+            <a class="btn btn-sm btn-outline" routerLink="/admin/reports/products" [queryParams]="reportDates()">Ver reporte</a>
+          </div>
+          @if (d.topProducts.length === 0) {
+            <p>Todavía no hay ventas cobradas en este período.</p>
+          } @else {
+            <ol class="divide-y divide-base-300" aria-label="Productos más vendidos">
+              @for (product of d.topProducts; track product.id) {
+                <li class="flex items-center justify-between gap-3 py-2">
+                  <span class="min-w-0 break-words font-medium">{{ product.title }}</span>
+                  <span class="text-right whitespace-nowrap">
+                    {{ product.units | number }} {{ product.units === 1 ? 'unidad' : 'unidades' }}
+                    <span class="block text-sm">{{ product.revenue | currency: 'GTQ' : 'symbol-narrow' }}</span>
+                  </span>
+                </li>
+              }
+            </ol>
+          }
+        </section>
+      </div>
+
+      <details class="card bg-base-100 border border-base-300 p-5">
+        <summary class="cursor-pointer font-semibold min-h-11 flex items-center">¿Cómo se calculan estos indicadores?</summary>
+        <dl class="mt-3 space-y-2 text-sm">
+          @for (item of definitions; track item.name) {
+            <div>
+              <dt class="font-semibold">{{ item.name }}</dt>
+              <dd>{{ item.text }}</dd>
+            </div>
+          }
+        </dl>
+        <p class="mt-3 text-sm">
+          Generado el {{ d.generatedAt | date: 'dd/MM/yyyy HH:mm' : '-0600' }} (hora de Guatemala).
+        </p>
+      </details>
+    </div>
+  }
+</div>

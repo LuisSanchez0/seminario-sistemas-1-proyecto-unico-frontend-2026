@@ -7,7 +7,7 @@
         class="mx-auto h-18 w-auto cursor-pointer"
       />
     </a>
-    @if (router.url === "/auth/login") {
+    @if (router.url.startsWith("/auth/login")) {
       <h2
         class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900"
       >
@@ -19,6 +19,8 @@
       >
         Factor de Autenticación
       </h2>
+    } @else if (router.url.startsWith("/auth/restore")) {
+      <h2 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900">Recuperar contraseña</h2>
     } @else {
       <h2
         class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900"

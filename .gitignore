@@ -42,3 +42,11 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Generated production public configuration and CI archives
+src/environments/environment.production.ts
+artifacts/
+.env
+.env.*
+# Vercel CLI link metadata, pulled environment and staged prebuilt output
+.vercel

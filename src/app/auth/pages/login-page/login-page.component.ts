@@ -5,7 +5,7 @@ import {
   Validators,
   ValueChangeEvent,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { FormUtils } from '../../../utils/form-utils';
 import { ErrorAlertComponent } from '../../../shared/components/error-alert/error-alert.component';
@@ -13,10 +13,11 @@ import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, ErrorAlertComponent],
+  imports: [ReactiveFormsModule, ErrorAlertComponent, RouterLink],
   templateUrl: './login-page.component.html',
 })
 export class LoginPageComponent{
+  readonly passwordReset = inject(ActivatedRoute).snapshot.queryParamMap.get('reset') === 'success';
   fb = inject(FormBuilder);
   hasError = signal(false);
   isPosting = signal(false);

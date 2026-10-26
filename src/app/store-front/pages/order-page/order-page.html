@@ -1,0 +1,259 @@
+<section class="mx-auto max-w-4xl px-4 py-8 sm:px-6" aria-labelledby="order-heading">
+  <a
+    routerLink="/my-orders"
+    class="inline-flex items-center gap-1 text-sm font-medium text-indigo-700 hover:text-indigo-900 focus:outline-none focus-visible:underline"
+  >
+    <span aria-hidden="true">←</span> Mis pedidos
+  </a>
+
+  @if (orderResource.isLoading() && !order()) {
+    <div class="mt-6 space-y-4" aria-busy="true" aria-label="Cargando pedido">
+      <div class="h-24 animate-pulse rounded-xl bg-gray-100"></div>
+      <div class="h-40 animate-pulse rounded-xl bg-gray-100"></div>
+    </div>
+  } @else if (notFound()) {
+    <div class="mt-6 rounded-xl border border-gray-200 bg-white px-6 py-14 text-center">
+      <h1 id="order-heading" class="text-lg font-bold text-gray-900">Pedido no encontrado</h1>
+      <p class="mt-1 text-sm text-gray-600">
+        Este pedido no existe o no pertenece a tu cuenta.
+      </p>
+      <a
+        routerLink="/my-orders"
+        class="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+        >Ver mis pedidos</a
+      >
+    </div>
+  } @else if (orderResource.error() && !order()) {
+    <div role="alert" class="mt-6 rounded-xl bg-red-50 p-5 text-sm text-red-800 ring-1 ring-inset ring-red-200">
+      <p>{{ apiErrorMessage(orderResource.error(), 'No se pudo cargar el pedido.') }}</p>
+      <button
+        type="button"
+        class="mt-3 rounded-lg bg-white px-3 py-1.5 font-medium text-red-800 ring-1 ring-red-300 hover:bg-red-100"
+        (click)="orderResource.reload()"
+      >
+        Reintentar
+      </button>
+    </div>
+  } @else if (order(); as order) {
+    @if (justPlaced()) {
+      <div
+        role="status"
+        class="mt-6 rounded-xl bg-emerald-50 p-5 ring-1 ring-inset ring-emerald-200"
+      >
+        <h2 class="text-lg font-bold text-emerald-900">¡Recibimos tu pedido!</h2>
+        <p class="mt-1 text-sm text-emerald-900">
+          Tu código es <strong class="font-mono">{{ order.orderCode }}</strong
+          >.
+          @if (order.paymentState === 'EN_ESPERA_DE_PAGO') {
+            Verificaremos tu pago y te avisaremos por correo cuando empecemos a prepararlo.
+          }
+        </p>
+      </div>
+    }
+
+    <header class="mt-6 flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 id="order-heading" class="font-mono text-2xl font-bold text-gray-900">
+          {{ order.orderCode }}
+        </h1>
+        <p class="mt-1 text-sm text-gray-600">
+          Realizado el {{ order.createdAt | date: "d 'de' MMMM y, h:mm a" }}
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <app-order-status-badge kind="order" [value]="order.orderState" />
+        <app-order-status-badge kind="payment" [value]="order.paymentState" />
+      </div>
+    </header>
+
+    <!-- Cancelado / reembolsado -->
+    @if (order.orderState === 'CANCELADO' || order.orderState === 'REEMBOLSADO') {
+      <div role="status" class="mt-6 rounded-xl bg-gray-100 p-5 text-sm text-gray-800">
+        <p class="font-semibold">
+          {{
+            order.orderState === 'CANCELADO' ? 'Este pedido fue cancelado.' : 'Este pedido fue reembolsado.'
+          }}
+        </p>
+        @if (order.cancellationReason) {
+          <p class="mt-1">Motivo: {{ order.cancellationReason }}</p>
+        }
+        <p class="mt-1 text-gray-700">
+          {{
+            order.orderState === 'CANCELADO'
+              ? 'Los productos volvieron al inventario.'
+              : 'Los productos volvieron al inventario y tu pago será devuelto por la tienda.'
+          }}
+        </p>
+      </div>
+    }
+
+    <!-- Seguimiento -->
+    @if (timeline(); as steps) {
+      <section class="mt-6 rounded-xl border border-gray-200 bg-white p-5" aria-labelledby="tracking-heading">
+        <h2 id="tracking-heading" class="mb-4 text-base font-semibold text-gray-900">Seguimiento</h2>
+        <app-order-timeline [steps]="steps" />
+        @if (order.orderState === 'PARCIALMENTE_ENVIADO') {
+          <p class="mt-4 text-sm text-gray-700">
+            Parte de tu pedido ya va en camino; el resto se está preparando.
+          </p>
+        }
+      </section>
+    }
+
+    <!-- Pago pendiente -->
+    @if (order.paymentState === 'EN_ESPERA_DE_PAGO') {
+      <section class="mt-6 space-y-4" aria-labelledby="payment-heading">
+        <h2 id="payment-heading" class="text-base font-semibold text-gray-900">Pago</h2>
+        <app-payment-account />
+
+        <div class="rounded-xl border border-gray-200 bg-white p-5">
+          @if (order.paymentReceipt) {
+            <p class="text-sm font-medium text-gray-900">Comprobante enviado</p>
+            <p class="mt-1 text-xs text-gray-600">
+              Enviado el {{ order.paymentReceipt.uploadedAt | date: 'd MMM y, h:mm a' }} — estamos
+              verificando tu pago.
+            </p>
+            @if (order.paymentReceipt.url) {
+              <a
+                [href]="order.paymentReceipt.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-2 inline-block text-sm font-medium text-indigo-700 hover:underline"
+                >Ver comprobante</a
+              >
+            }
+          } @else {
+            <p class="text-sm font-medium text-amber-900">Aún no subes tu comprobante de pago.</p>
+          }
+
+          <div class="mt-3">
+            <label
+              for="receipt-input"
+              class="inline-flex cursor-pointer items-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-800 ring-1 ring-gray-300 focus-within:ring-2 focus-within:ring-indigo-600 hover:bg-gray-50"
+              [class.opacity-50]="uploading()"
+            >
+              {{
+                uploading()
+                  ? 'Subiendo…'
+                  : order.paymentReceipt
+                    ? 'Reemplazar comprobante'
+                    : 'Subir comprobante'
+              }}
+              <input
+                id="receipt-input"
+                type="file"
+                class="sr-only"
+                accept="image/png,image/jpeg,image/webp"
+                [disabled]="uploading()"
+                (change)="onReceiptSelected($event)"
+              />
+            </label>
+            <span class="ml-2 text-xs text-gray-600">PNG, JPG o WebP — máx. 8 MB</span>
+          </div>
+          @if (uploadError()) {
+            <p role="alert" class="mt-2 text-sm text-red-700">{{ uploadError() }}</p>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Productos -->
+    <section class="mt-6 rounded-xl border border-gray-200 bg-white" aria-labelledby="items-heading">
+      <h2 id="items-heading" class="border-b border-gray-200 px-5 py-4 text-base font-semibold text-gray-900">
+        Productos
+      </h2>
+      <ul class="divide-y divide-gray-100">
+        @for (item of order.items; track item.id) {
+          <li class="flex gap-4 p-4 sm:px-5">
+            @if (item.imageUrl) {
+              <img
+                [src]="item.imageUrl"
+                [alt]="item.title"
+                class="h-16 w-16 shrink-0 rounded-lg bg-gray-50 object-cover"
+              />
+            } @else {
+              <span class="h-16 w-16 shrink-0 rounded-lg bg-gray-100"></span>
+            }
+            <div class="min-w-0 flex-1">
+              @if (item.brandName) {
+                <p class="text-xs font-medium uppercase tracking-wide text-gray-600">
+                  {{ item.brandName }}
+                </p>
+              }
+              <p class="font-medium text-gray-900">{{ item.title }}</p>
+              <p class="mt-0.5 text-sm text-gray-600">
+                {{ item.quantity }} × {{ item.unitPrice | currency: 'GTQ' : 'symbol-narrow' }}
+              </p>
+              @if (order.paymentState === 'PAGO_REALIZADO') {
+                <div class="mt-1.5">
+                  <app-order-status-badge kind="shipping" [value]="item.shippingStatus" />
+                </div>
+              }
+            </div>
+            <p class="shrink-0 font-semibold text-gray-900">
+              {{ item.subtotal | currency: 'GTQ' : 'symbol-narrow' }}
+            </p>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <div class="mt-6 grid gap-6 sm:grid-cols-2">
+      <section class="rounded-xl border border-gray-200 bg-white p-5" aria-labelledby="address-heading">
+        <h2 id="address-heading" class="text-base font-semibold text-gray-900">Dirección de envío</h2>
+        <address class="mt-2 text-sm not-italic leading-relaxed text-gray-700">
+          {{ order.shippingAddress.full_address }}<br />
+          @if (order.shippingAddress.street) {
+            {{ order.shippingAddress.street }}<br />
+          }
+          {{ order.shippingAddress.municipality }}, {{ order.shippingAddress.department }}<br />
+          Tel. {{ order.shippingAddress.phoneNumber }}
+        </address>
+      </section>
+
+      <section class="rounded-xl border border-gray-200 bg-white p-5" aria-labelledby="summary-heading">
+        <h2 id="summary-heading" class="text-base font-semibold text-gray-900">Resumen</h2>
+        <dl class="mt-2 space-y-1.5 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-gray-600">Subtotal</dt>
+            <dd class="text-gray-900">{{ order.subtotal | currency: 'GTQ' : 'symbol-narrow' }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-gray-600">Envío</dt>
+            <dd class="text-gray-900">{{ order.shippingCost | currency: 'GTQ' : 'symbol-narrow' }}</dd>
+          </div>
+          <div class="flex justify-between border-t border-gray-200 pt-2 text-base font-bold">
+            <dt>Total</dt>
+            <dd>{{ order.total | currency: 'GTQ' : 'symbol-narrow' }}</dd>
+          </div>
+          <div class="flex justify-between pt-1">
+            <dt class="text-gray-600">NIT</dt>
+            <dd class="text-gray-900">{{ order.nit }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+
+    @if (order.canCancel) {
+      <div class="mt-6 flex justify-end">
+        <button
+          type="button"
+          class="rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-700 ring-1 ring-red-300 hover:bg-red-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600"
+          (click)="askCancel()"
+        >
+          Cancelar pedido
+        </button>
+      </div>
+    }
+  }
+
+  <app-confirm-dialog
+    title="Cancelar pedido"
+    message="Se cancelará este pedido y los productos volverán al inventario. Esta acción no se puede deshacer."
+    confirmLabel="Sí, cancelar pedido"
+    cancelLabel="Conservar pedido"
+    [busy]="cancelling()"
+    [error]="cancelError()"
+    (confirmed)="cancelOrder()"
+  />
+</section>

@@ -60,7 +60,7 @@ describe('Cosmetics cart page', () => {
   beforeEach(() => {
     localStorage.clear();
     user.set(null);
-    localStorage.setItem('prowear_guest_id', 'test-guest');
+    localStorage.setItem('lumina_guest_id', 'test-guest');
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -219,6 +219,18 @@ describe('Cosmetics cart page', () => {
     expect(component.lineCount()).toBe(1);
     expect(component.totalUnits()).toBe(3);
     http.expectOne(`${url}/products/${perfume.id}`).flush(serverProduct(perfume));
+  });
+
+  it('verifies lines that appear after the page was created (cart restored once the session is known)', () => {
+    start([]);
+    expect(component.lineCount()).toBe(0);
+    // A full reload restores the cart only after the session check completes.
+    store.addToCart({ product: perfume, quantity: 1 });
+    fixture.detectChanges();
+    expect(component.stateOf(component.items()[0])).toBe('checking');
+    settle([serverProduct(perfume)]);
+    expect(component.stateOf(component.items()[0])).toBe('ok');
+    expect(component.canCheckout()).toBe(true);
   });
 
   it('persists quantity changes and removals across a reload', () => {

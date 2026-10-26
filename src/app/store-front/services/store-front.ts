@@ -1,7 +1,9 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { AuthService } from '../../auth/services/auth.service';
 
-const GUEST_ID_KEY = 'prowear_guest_id';
+const GUEST_ID_KEY = 'lumina_guest_id';
+/** Llave anterior del identificador de invitado; se adopta una vez para no perder carritos existentes. */
+const LEGACY_GUEST_ID_KEY = 'prowear_guest_id';
 const CART_USER_PREFIX = 'cart_cosmetics_v1_user_';
 const CART_GUEST_PREFIX = 'cart_cosmetics_v1_guest_';
 
@@ -129,7 +131,7 @@ export class StoreFront {
   }));
 
   constructor() {
-    this.guestId = localStorage.getItem(GUEST_ID_KEY) ?? this._createGuestId();
+    this.guestId = this._loadGuestId();
 
     effect(
       () => {
@@ -245,6 +247,18 @@ export class StoreFront {
 
   clearCart(): void {
     this._cartItems.set([]);
+  }
+
+  private _loadGuestId(): string {
+    const current = localStorage.getItem(GUEST_ID_KEY);
+    if (current) return current;
+    const legacy = localStorage.getItem(LEGACY_GUEST_ID_KEY);
+    if (legacy) {
+      localStorage.setItem(GUEST_ID_KEY, legacy);
+      localStorage.removeItem(LEGACY_GUEST_ID_KEY);
+      return legacy;
+    }
+    return this._createGuestId();
   }
 
   private _createGuestId(): string {

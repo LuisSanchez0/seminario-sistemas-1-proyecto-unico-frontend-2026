@@ -31,7 +31,7 @@ export class RegisterPageComponent implements OnInit {
       [FormUtils.checkingServerResponse()],
     ],
     name: ['', [Validators.required, Validators.minLength(4)]],
-    password: ['', [Validators.required, Validators.minLength(3)]],
+    password: ['', [Validators.required, Validators.minLength(4)]],
   });
 
   onSubmit() {

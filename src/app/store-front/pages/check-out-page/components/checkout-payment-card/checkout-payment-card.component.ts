@@ -1,58 +1,51 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { PaymentAccountComponent } from '../../../../../orders/components/payment-account/payment-account.component';
 
-const ACCOUNT_NUMBER = '967954744';
+export const RECEIPT_MAX_BYTES = 8 * 1024 * 1024;
+export const RECEIPT_TYPES: readonly string[] = ['image/png', 'image/jpeg', 'image/webp'];
+
+/** Devuelve el motivo por el que un archivo no sirve como comprobante, o `null` si es válido. */
+export function receiptFileError(file: File): string | null {
+  if (!RECEIPT_TYPES.includes(file.type)) return 'El comprobante debe ser una imagen PNG, JPG o WebP.';
+  if (file.size > RECEIPT_MAX_BYTES) return 'El comprobante no puede pesar más de 8 MB.';
+  return null;
+}
 
 @Component({
   selector: 'app-checkout-payment-card',
   standalone: true,
-  imports: [],
+  imports: [PaymentAccountComponent],
   templateUrl: './checkout-payment-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CheckoutPaymentCardComponent {
-  /**
-   * Base64 receipt image managed by the parent container.
-   * Null when no image has been uploaded.
-   */
+  /** Vista previa en base64 administrada por el contenedor; `null` si no hay imagen. */
   receiptImage = input<string | null>(null);
 
-  /** Emits the selected file (with its base64 preview) when a new image is chosen, or null to clear. */
+  /** Emite el archivo elegido (con su vista previa) o `null` para quitarlo. */
   receiptChange = output<{ base64: string; file: File } | null>();
 
-  readonly copied = signal(false);
-  readonly accountNumber = ACCOUNT_NUMBER;
-
-  copyAccountNumber(): void {
-    navigator.clipboard
-      .writeText(this.accountNumber)
-      .then(() => {
-        this.copied.set(true);
-        setTimeout(() => this.copied.set(false), 2000);
-      })
-      .catch(() => {
-        // Clipboard API may be unavailable (non-HTTPS, old browser)
-      });
-  }
+  readonly fileError = signal<string | null>(null);
 
   async onFileChange(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
-    const base64 = await this._fileToBase64(file);
-    this.receiptChange.emit({ base64, file });
-
-    // Reset the input so the same file can be re-selected after removal
+    const problem = receiptFileError(file);
     input.value = '';
+    this.fileError.set(problem);
+    if (problem) return;
+
+    try {
+      this.receiptChange.emit({ base64: await this._fileToBase64(file), file });
+    } catch {
+      this.fileError.set('No se pudo leer el archivo. Intenta con otra imagen.');
+    }
   }
 
   removeReceipt(): void {
+    this.fileError.set(null);
     this.receiptChange.emit(null);
   }
 

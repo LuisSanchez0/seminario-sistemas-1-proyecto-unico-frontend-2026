@@ -1,137 +1,42 @@
-<div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+<div class="space-y-4">
+  <app-payment-account />
 
-  <!-- ── Card header — bank identity ──────────────────────────────────────── -->
-  <div class="bg-gradient-to-r from-red-800 to-red-600 px-5 py-4">
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <p class="text-[10px] font-semibold uppercase tracking-widest text-red-200">
-          Método de pago
-        </p>
-        <p class="mt-0.5 text-lg font-bold text-white">
-          Transferencia bancaria
-        </p>
-      </div>
-      <span class="inline-flex items-center rounded-lg bg-white/15 px-3 py-1.5 text-sm font-bold tracking-wide text-white ring-1 ring-white/20 backdrop-blur-sm">
-        BAC
-      </span>
-    </div>
-  </div>
-
-  <!-- ── Bank details ───────────────────────────────────────────────────────── -->
-  <div class="space-y-4 p-5">
-
-    <!-- Account details grid -->
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-          Tipo de cuenta
-        </p>
-        <p class="mt-0.5 text-sm font-semibold text-gray-900">Ahorros</p>
-      </div>
-      <div>
-        <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-          Banco
-        </p>
-        <p class="mt-0.5 text-sm font-semibold text-gray-900">BAC</p>
-      </div>
-    </div>
-
-    <!-- Account holder -->
-    <div>
-      <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-        Nombre
-      </p>
-      <p class="mt-0.5 text-sm font-semibold text-gray-900">Mariano Mazariegos</p>
-    </div>
-
-    <!-- Account number — highlighted box -->
-    <div class="rounded-lg bg-gray-50 p-4 ring-1 ring-gray-200">
-      <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-        Número de cuenta
-      </p>
-      <div class="flex items-center justify-between gap-3">
-        <p class="font-mono text-xl font-bold tracking-[0.15em] text-gray-900">
-          {{ accountNumber }}
-        </p>
-        <button
-          type="button"
-          (click)="copyAccountNumber()"
-          class="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors"
-          [class]="copied()
-            ? 'bg-green-100 text-green-700 ring-1 ring-green-200'
-            : 'bg-white text-gray-600 ring-1 ring-gray-300 hover:bg-gray-100 hover:text-gray-900'"
-        >
-          @if (copied()) {
-            <!-- checkmark icon -->
-            <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-              <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
-            </svg>
-            Copiado
-          } @else {
-            <!-- copy icon -->
-            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
-            </svg>
-            Copiar
-          }
-        </button>
-      </div>
-    </div>
-
-    <!-- Instructions -->
-    <p class="text-xs leading-relaxed text-gray-500">
-      Realiza tu transferencia o depósito a la cuenta indicada.
-      Guarda tu comprobante y súbelo a continuación para agilizar la
-      confirmación de tu pedido.
-    </p>
-
-  </div>
-
-  <!-- ── Receipt upload ─────────────────────────────────────────────────────── -->
-  <div class="border-t border-gray-200 p-5">
+  <!-- ── Comprobante ─────────────────────────────────────────────────────── -->
+  <div class="rounded-xl border border-gray-200 bg-white p-5">
     <div class="mb-3 flex items-center justify-between">
-      <p class="text-sm font-medium text-gray-900">
-        Comprobante de pago
-      </p>
-      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">
-        Opcional
+      <p class="text-sm font-medium text-gray-900">Comprobante de pago</p>
+      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-700">
+        Requerido
       </span>
     </div>
 
     @if (receiptImage()) {
-
-      <!-- ── Preview state ─────────────────────────────────────────────────── -->
       <div class="relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
         <img
           [src]="receiptImage()"
-          alt="Comprobante de pago"
+          alt="Vista previa del comprobante de pago"
           class="h-40 w-full object-contain p-2"
         />
-        <div class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-white/90 px-3 py-2 backdrop-blur-sm">
-          <p class="text-xs text-gray-500">Comprobante cargado</p>
+        <div
+          class="flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-3 py-2"
+        >
+          <p class="text-xs text-gray-600">Comprobante cargado</p>
           <button
             type="button"
             (click)="removeReceipt()"
-            class="inline-flex items-center gap-1 text-xs font-medium text-red-500 transition-colors hover:text-red-700"
+            class="text-xs font-medium text-red-700 hover:text-red-800 focus:outline-none focus-visible:underline"
           >
-            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-            Eliminar
+            Quitar
           </button>
         </div>
       </div>
-
     } @else {
-
-      <!-- ── Upload zone ────────────────────────────────────────────────────── -->
       <label
         for="receipt-upload"
-        class="group flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50"
+        class="group flex cursor-pointer flex-col items-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center transition-colors focus-within:ring-2 focus-within:ring-indigo-500 hover:border-indigo-400 hover:bg-indigo-50"
       >
-        <!-- Upload cloud icon -->
         <svg
-          class="mx-auto h-8 w-8 text-gray-400 transition-colors group-hover:text-indigo-400"
+          class="mx-auto h-8 w-8 text-gray-500"
           fill="none"
           stroke="currentColor"
           stroke-width="1.5"
@@ -144,12 +49,8 @@
             d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.338-2.32 3.75 3.75 0 0 1 3.821 6.783"
           />
         </svg>
-        <p class="mt-2 text-sm font-medium text-gray-700 transition-colors group-hover:text-indigo-700">
-          Subir comprobante
-        </p>
-        <p class="mt-0.5 text-xs text-gray-400">
-          PNG, JPG, WEBP — máx. 10 MB
-        </p>
+        <span class="mt-2 text-sm font-medium text-gray-700">Subir comprobante</span>
+        <span class="mt-0.5 text-xs text-gray-600">PNG, JPG o WebP — máx. 8 MB</span>
         <input
           id="receipt-upload"
           type="file"
@@ -158,9 +59,10 @@
           (change)="onFileChange($event)"
         />
       </label>
-
     }
 
+    @if (fileError()) {
+      <p role="alert" class="mt-2 text-xs text-red-700">{{ fileError() }}</p>
+    }
   </div>
-
 </div>

@@ -3,8 +3,10 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -101,10 +103,17 @@ export class CartPage {
   });
 
   constructor() {
-    // Stock in the cart is a snapshot from when the item was added; re-check on entry.
-    for (const productId of new Set(this.items().map((item) => item.product.id))) {
-      this.verify(productId);
-    }
+    // Stock in the cart is a snapshot from when the item was added; re-check every line that has
+    // not been checked yet. An effect (not a one-shot loop) because after a full page reload the
+    // cart is restored from storage only once the session is known: the constructor would see an
+    // empty cart and the lines would stay on "Verificando disponibilidad…" forever.
+    effect(() => {
+      const productIds = new Set(this.items().map((item) => item.product.id));
+      untracked(() => {
+        const known = this.verifyStates();
+        for (const productId of productIds) if (!(productId in known)) this.verify(productId);
+      });
+    });
   }
 
   stateOf(item: CartItem): CartLineState {
