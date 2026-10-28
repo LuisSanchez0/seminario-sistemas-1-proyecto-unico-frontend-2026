@@ -1,250 +1,325 @@
-<div class="bg-white">
+<div class="overflow-x-clip px-4 pt-6 pb-20 text-stone-900 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl space-y-20 sm:space-y-28">
+    <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+    <section
+      aria-labelledby="hero-heading"
+      class="relative isolate overflow-hidden rounded-[2rem] bg-gradient-to-br from-rose-50 via-white to-amber-50 ring-1 ring-rose-100"
+    >
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+        <div class="absolute -top-32 -left-24 size-80 rounded-full bg-rose-200/40 blur-3xl"></div>
+        <div
+          class="absolute -right-20 -bottom-32 size-96 rounded-full bg-amber-100/60 blur-3xl"
+        ></div>
+      </div>
 
-  <header class="relative overflow-hidden">
-    <!-- Hero section -->
-    <div class="pt-16 pb-80 sm:pt-24 sm:pb-40 lg:pt-40 lg:pb-48">
-      <div class="relative mx-auto max-w-7xl px-4 sm:static sm:px-6 lg:px-8">
-        <div class="sm:max-w-lg">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Tu próxima obsesión de belleza está aquí</h1>
-          <p class="mt-4 text-xl text-gray-500">Descubre maquillaje, skincare y esenciales de belleza. Elige tus favoritos y recíbelos donde quieras.</p>
+      <div class="px-6 pt-12 sm:px-10 sm:pt-16 lg:w-1/2 lg:py-36 lg:pr-8 lg:pl-14">
+        <div class="max-w-lg">
+          <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">
+            Maquillaje · Skincare · Fragancias
+          </p>
+          <h1
+            id="hero-heading"
+            class="mt-5 font-serif text-4xl leading-[1.05] tracking-tight text-stone-900 sm:text-6xl lg:text-5xl xl:text-6xl"
+          >
+            Tu próxima obsesión de belleza está aquí
+          </h1>
+          <p class="mt-6 max-w-md text-lg leading-relaxed text-stone-600">
+            Descubre maquillaje, skincare y esenciales de belleza. Elige tus favoritos y recíbelos
+            donde quieras.
+          </p>
+          <div class="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <a
+              routerLink="/products"
+              class="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-stone-900 px-7 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-700"
+            >
+              Ver catálogo
+              <svg
+                aria-hidden="true"
+                class="size-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0-5 5m5-5H6" />
+              </svg>
+            </a>
+            <a
+              href="#categorias"
+              class="inline-flex min-h-12 items-center justify-center rounded-full border border-stone-300 bg-white/70 px-7 text-sm font-semibold text-stone-900 transition hover:border-stone-900"
+            >
+              Descubrir categorías
+            </a>
+          </div>
         </div>
-        <div>
-          <div class="mt-10">
-            <!-- Decorative image grid -->
-            <div aria-hidden="true" class="pointer-events-none lg:absolute lg:inset-y-0 lg:mx-auto lg:w-full lg:max-w-7xl">
-              <div class="absolute transform sm:top-0 sm:left-1/2 sm:translate-x-8 lg:top-1/2 lg:left-1/2 lg:translate-x-8 lg:-translate-y-1/2">
-                <div class="flex items-center space-x-6 lg:space-x-8">
-                  <div class="grid shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
-                    <div class="h-64 w-44 overflow-hidden rounded-lg sm:opacity-0 lg:opacity-100">
-                      <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen-1.jpeg" alt="" class="size-full object-cover" />
-                    </div>
-                    <div class="h-64 w-44 overflow-hidden rounded-lg">
-                      <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen-2.jpeg" alt="" class="size-full object-cover" />
-                    </div>
-                  </div>
-                  <div class="grid shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
-                    <div class="h-64 w-44 overflow-hidden rounded-lg">
-                      <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen-4.jpeg" alt="" class="size-full object-cover" />
-                    </div>
-                    <div class="h-64 w-44 overflow-hidden rounded-lg">
-                      <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen--10.jpeg" alt="" class="size-full object-cover" />
-                    </div>
-                    <div class="h-64 w-44 overflow-hidden rounded-lg">
-                      <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen-5.jpeg" alt="" class="size-full object-cover" />
-                    </div>
-                  </div>
-                  <div class="grid shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
-                    <div class="h-64 w-44 overflow-hidden rounded-lg">
-                      <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen-6.jpeg" alt="" class="size-full object-cover" />
-                    </div>
-                    <div class="h-64 w-44 overflow-hidden rounded-lg">
-                      <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen-8.jpeg" alt="" class="size-full object-cover" />
-                    </div>
-                  </div>
+      </div>
+
+      <!--
+        Decorative image tiles: an in-flow strip under the copy on small screens, and a
+        vertically centred column set bleeding off the right half on large screens.
+      -->
+      <div
+        aria-hidden="true"
+        class="pointer-events-none relative mt-12 h-80 sm:h-96 lg:absolute lg:inset-y-0 lg:right-0 lg:mt-0 lg:h-auto lg:w-1/2"
+      >
+        <div
+          class="absolute top-0 left-1/2 flex -translate-x-1/2 items-center gap-6 lg:top-1/2 lg:left-0 lg:translate-x-0 lg:-translate-y-1/2 lg:gap-8"
+        >
+          @for (column of heroColumns; track $index; let middle = $odd) {
+            <div class="grid shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
+              @for (image of column; track image) {
+                <div
+                  class="relative h-64 w-44 overflow-hidden rounded-2xl bg-rose-100 shadow-sm ring-1 ring-black/5"
+                >
+                  <img [ngSrc]="image" fill [priority]="middle" alt="" class="object-cover" />
                 </div>
-              </div>
+              }
             </div>
-
-            <a [routerLink]="'/products'" class="inline-block rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-center font-medium text-white hover:bg-indigo-700">Ver Catálogo</a>
-          </div>
+          }
         </div>
       </div>
-    </div>
-  </header>
+    </section>
 
-  <main>
-    <!-- Category section -->
-    <section aria-labelledby="category-heading" class="bg-gradient-to-b from-white to-gray-50">
-      <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-        <div class="sm:flex sm:items-baseline sm:justify-between">
-          <div>
-            <h2 id="category-heading" class="text-2xl font-bold tracking-tight text-gray-900">Productos Destacados</h2>
-            <p class="mt-1 text-sm text-gray-500">Las categorías más populares de nuestro catálogo.</p>
-          </div>
-          <a routerLink="/products/all/all" class="hidden text-sm font-semibold text-indigo-600 hover:text-indigo-500 sm:block">
-            Ver todos los productos<span aria-hidden="true"> &rarr;</span>
-          </a>
+    <!-- ── Category discovery ───────────────────────────────────────────── -->
+    <section id="categorias" aria-labelledby="categories-heading" class="scroll-mt-24">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">
+            Compra por categoría
+          </p>
+          <h2
+            id="categories-heading"
+            class="mt-2 font-serif text-3xl tracking-tight text-stone-900 sm:text-4xl"
+          >
+            Todo lo que tu rutina necesita
+          </h2>
+          <p class="mt-2 text-sm text-stone-600">
+            Del primer paso de limpieza al último toque de perfume.
+          </p>
         </div>
+        <a
+          routerLink="/products"
+          class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-stone-900 underline-offset-4 hover:underline"
+        >
+          Ver todos los productos<span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
 
-        <div class="mt-8 grid grid-cols-1 gap-y-8 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-0 lg:gap-x-8">
-          <a routerLink="/products/all/polo"
-             class="group relative overflow-hidden rounded-2xl shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-            <div class="relative aspect-square w-full overflow-hidden bg-gray-50">
-              <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen-9.jpeg" alt="Camisas tipo polo corporativas." class="absolute size-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div aria-hidden="true" class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70"></div>
-              <!-- Badge -->
-              <span class="absolute top-3 left-3 inline-flex items-center rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-                Destacado
+      <ul role="list" class="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 md:grid-cols-4">
+        @for (item of categories; track item.value) {
+          <li class="min-w-0">
+            <a
+              [routerLink]="['/products']"
+              [queryParams]="{ category: item.value }"
+              class="group block rounded-2xl"
+            >
+              <span
+                class="relative block aspect-square overflow-hidden rounded-2xl shadow-sm md:aspect-[4/3] ring-1 ring-black/5 transition duration-300 group-hover:shadow-md"
+                [style.backgroundImage]="item.gradient"
+              >
+                @if (!isImageBroken(item.value)) {
+                  <img
+                    [ngSrc]="item.image"
+                    fill
+                    alt=""
+                    (error)="onImageError(item.value)"
+                    class="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                  />
+                }
               </span>
-            </div>
-            <div class="absolute inset-0 flex items-end p-6">
-              <div>
-                <h3 class="text-base font-semibold text-white">PRODUCTO X</h3>
-                <span class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-white/80 transition-colors group-hover:text-white">
-                  Ver producto
-                  <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </a>
-
-          <a routerLink="/products/all/"
-             class="group relative overflow-hidden rounded-2xl shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-            <div class="relative aspect-square w-full overflow-hidden bg-gray-50">
-              <img src="https://lumina-beauty-bucket.s3.us-east-1.amazonaws.com/static/images/imagen3.jpeg" alt="Camisas tipo empresarial corporativas." class="absolute size-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div aria-hidden="true" class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70"></div>
-              <!-- Badge -->
-              <span class="absolute top-3 left-3 inline-flex items-center rounded-full bg-indigo-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-                Destacado
+              <span class="mt-3 flex items-center justify-between gap-2">
+                <span class="font-medium text-stone-900">{{ item.label }}</span>
+                <span
+                  aria-hidden="true"
+                  class="text-stone-400 transition-transform group-hover:translate-x-0.5 group-hover:text-stone-900"
+                  >&rarr;</span
+                >
               </span>
-            </div>
-            <div class="absolute inset-0 flex items-end p-6">
-              <div>
-                <h3 class="text-base font-semibold text-white">PRODUCTO X</h3>
-                <span class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-white/80 transition-colors group-hover:text-white">
-                  Ver producto
-                  <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                  </svg>
+              <span class="mt-0.5 block text-sm text-stone-600">{{ item.blurb }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- ── Featured products (real catalog data) ────────────────────────── -->
+    <home-featured-products />
+
+    <!-- ── Skincare routine ─────────────────────────────────────────────── -->
+    <section
+      aria-labelledby="routine-heading"
+      class="relative isolate overflow-hidden rounded-[2rem] bg-stone-900 text-white"
+    >
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+        <div class="absolute -top-24 right-1/3 size-72 rounded-full bg-rose-400/20 blur-3xl"></div>
+        <div
+          class="absolute -bottom-24 -left-10 size-72 rounded-full bg-amber-300/10 blur-3xl"
+        ></div>
+      </div>
+      <div class="grid gap-10 px-6 py-12 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:px-14">
+        <div class="max-w-md self-center">
+          <p class="text-xs font-semibold tracking-[0.2em] text-rose-200 uppercase">
+            Cuidado de la piel
+          </p>
+          <h2 id="routine-heading" class="mt-3 font-serif text-4xl tracking-tight sm:text-5xl">
+            Tu rutina comienza aquí
+          </h2>
+          <p class="mt-5 leading-relaxed text-stone-300">
+            Cuatro pasos básicos para una piel cuidada. Empieza por el que necesites y encuentra los
+            productos de cada uno.
+          </p>
+          <a
+            [routerLink]="['/products']"
+            [queryParams]="{ category: routine[0].category.value }"
+            class="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-sm font-semibold text-stone-900 transition hover:bg-rose-50"
+          >
+            Empezar por la limpieza
+          </a>
+        </div>
+
+        <ol role="list" class="space-y-3">
+          @for (step of routine; track step.category.value; let index = $index) {
+            <li>
+              <a
+                [routerLink]="['/products']"
+                [queryParams]="{ category: step.category.value }"
+                class="group flex items-center gap-4 rounded-2xl bg-white/5 p-3 ring-1 ring-white/10 transition hover:bg-white/10 sm:p-4"
+              >
+                <span
+                  aria-hidden="true"
+                  class="relative size-14 shrink-0 overflow-hidden rounded-xl sm:size-16"
+                  [style.backgroundImage]="step.category.gradient"
+                >
+                  <img [ngSrc]="step.category.image" fill alt="" class="object-cover" />
                 </span>
-              </div>
-            </div>
-          </a>
-        </div>
-
-        <div class="mt-8 text-sm sm:hidden">
-          <a routerLink="/products/all/all" class="font-medium text-indigo-600 hover:text-indigo-500">
-            Ver todas las categorías<span aria-hidden="true"> &rarr;</span>
-          </a>
-        </div>
+                <span class="min-w-0 flex-1">
+                  <span class="flex flex-wrap items-baseline gap-x-2">
+                    <span class="text-xs font-semibold text-rose-200">0{{ index + 1 }}</span>
+                    <span class="font-serif text-xl">{{ step.verb }}</span>
+                    <span class="text-sm text-stone-300">· {{ step.category.label }}</span>
+                  </span>
+                  <span class="mt-0.5 block text-sm text-stone-300">{{ step.description }}</span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  class="hidden text-stone-400 transition-transform group-hover:translate-x-0.5 group-hover:text-white sm:block"
+                  >&rarr;</span
+                >
+              </a>
+            </li>
+          }
+        </ol>
       </div>
     </section>
 
-    <!-- Top Products / Más vendidos -->
-    <section aria-labelledby="top-products-heading" class="bg-gradient-to-b from-white to-gray-50">
-      <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-
-        <div class="sm:flex sm:items-baseline sm:justify-between">
-          <div>
-            <h2 id="top-products-heading" class="text-2xl font-bold tracking-tight text-gray-900">
-              Productos más vendidos
-            </h2>
-            <p class="mt-1 text-sm text-gray-500">Las prendas favoritas de nuestros clientes.</p>
-          </div>
-          <a routerLink="/products/all/all" class="hidden text-sm font-semibold text-indigo-600 hover:text-indigo-500 sm:block">
-            Ver catálogo<span aria-hidden="true"> &rarr;</span>
-          </a>
-        </div>
-
-        <!-- Loading state -->
-        <!--  -->
-
+    <!-- ── Beauty for every moment ──────────────────────────────────────── -->
+    <section aria-labelledby="moments-heading" class="grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+      <div class="max-w-sm">
+        <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">
+          Nuestro catálogo
+        </p>
+        <h2
+          id="moments-heading"
+          class="mt-2 font-serif text-3xl tracking-tight text-stone-900 sm:text-4xl"
+        >
+          Belleza para cada momento
+        </h2>
+        <p class="mt-4 leading-relaxed text-stone-600">
+          Ocho categorías agrupadas según cómo las usas: para cuidarte, para maquillarte, para
+          protegerte y para dejar huella.
+        </p>
       </div>
+
+      <ul role="list" class="grid gap-4 sm:grid-cols-2">
+        @for (moment of moments; track moment.title) {
+          <li class="flex flex-col rounded-2xl border border-stone-200 bg-white p-6">
+            <div class="flex -space-x-2" aria-hidden="true">
+              @for (item of moment.categories; track item.value) {
+                <span
+                  class="size-8 rounded-full ring-2 ring-white"
+                  [style.backgroundImage]="item.gradient"
+                ></span>
+              }
+            </div>
+            <h3 class="mt-5 text-lg font-semibold text-stone-900">{{ moment.title }}</h3>
+            <p class="mt-1 text-sm leading-relaxed text-stone-600">{{ moment.description }}</p>
+            <ul role="list" class="mt-5 flex flex-wrap gap-2">
+              @for (item of moment.categories; track item.value) {
+                <li>
+                  <a
+                    [routerLink]="['/products']"
+                    [queryParams]="{ category: item.value }"
+                    class="inline-flex min-h-10 items-center rounded-full border border-stone-200 px-4 text-sm text-stone-700 transition hover:border-stone-900 hover:text-stone-900"
+                    >{{ item.label }}</a
+                  >
+                </li>
+              }
+            </ul>
+          </li>
+        }
+      </ul>
     </section>
 
-    <!-- ProWear Incentives -->
-    <section aria-labelledby="incentives-heading" class="border-t border-gray-100 bg-gray-50">
-      <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-        <div class="mx-auto max-w-2xl lg:max-w-none">
-
-          <div class="max-w-3xl">
-            <h2 id="incentives-heading" class="text-4xl font-bold tracking-tight text-gray-900">
-              Belleza que acompaña cada momento de tu rutina
-            </h2>
-            <p class="mt-4 text-gray-500">
-              Descubre una selección de maquillaje, skincare y esenciales de belleza pensados para ayudarte a expresar tu estilo y cuidar de ti todos los días.
-            </p>
-          </div>
-
-          <div class="mt-16 grid grid-cols-1 gap-6 lg:grid-cols-3">
-
-            <!-- Envíos a todo el país -->
-            <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50">
-                <svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                </svg>
-              </div>
-              <h3 class="mt-5 text-base font-semibold text-gray-900">Envíos a todo el país</h3>
-              <p class="mt-2 text-sm leading-relaxed text-gray-500">
-                Recibe tus productos favoritos hasta donde estés, con un proceso de entrega pensado para que tu compra sea cómoda y segura.
-              </p>
-            </div>
-
-            <!-- Prendas de primera calidad -->
-            <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50">
-                <svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12z" />
-                </svg>
-              </div>
-              <h3 class="mt-5 text-base font-semibold text-gray-900">Productos para cada rutina</h3>
-              <p class="mt-2 text-sm leading-relaxed text-gray-500">
-                Encuentra maquillaje, skincare y cuidado personal organizados por categorías, marcas y tipos de producto para descubrir fácilmente lo que necesitas.
-              </p>
-            </div>
-
-            <!-- Bordados y DTF profesionales -->
-            <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md">
-              <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50">
-                <svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" />
-                </svg>
-              </div>
-              <h3 class="mt-5 text-base font-semibold text-gray-900">Sigue tu pedido en todo momento</h3>
-              <p class="mt-2 text-sm leading-relaxed text-gray-500">
-                Consulta el estado de tu compra desde que confirmamos tu pago hasta que tu pedido sea enviado y llegue a tus manos.
-            </div>
-
-          </div>
-        </div>
-      </div>
+    <!-- ── Trust / benefits ─────────────────────────────────────────────── -->
+    <section
+      aria-labelledby="benefits-heading"
+      class="rounded-[2rem] bg-rose-50/70 px-6 py-12 ring-1 ring-rose-100 sm:px-10 lg:px-14"
+    >
+      <h2
+        id="benefits-heading"
+        class="font-serif text-2xl tracking-tight text-stone-900 sm:text-3xl"
+      >
+        Comprar aquí es sencillo
+      </h2>
+      <ul role="list" class="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        @for (benefit of benefits; track benefit.title) {
+          <li>
+            <span
+              aria-hidden="true"
+              class="flex size-11 items-center justify-center rounded-xl bg-white text-rose-700 shadow-sm ring-1 ring-rose-100"
+            >
+              <svg
+                class="size-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="benefit.icon" />
+              </svg>
+            </span>
+            <h3 class="mt-4 font-semibold text-stone-900">{{ benefit.title }}</h3>
+            <p class="mt-1 text-sm leading-relaxed text-stone-600">{{ benefit.description }}</p>
+          </li>
+        }
+      </ul>
     </section>
-  </main>
 
-  <footer aria-labelledby="footer-heading" class="bg-white">
-    <h2 id="footer-heading" class="sr-only">Footer</h2>
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="py-20 xl:grid xl:grid-cols-3 xl:gap-8">
-        <div class="grid grid-cols-2 gap-8 xl:col-span-2">
-          <div class="space-y-16 md:grid md:grid-cols-2 md:gap-8 md:space-y-0">
-            <div>
-              <h3 class="text-sm font-medium text-gray-900">Tienda</h3>
-              <ul role="list" class="mt-6 space-y-6">
-                <li class="text-sm">
-                  <a routerLink="/products/all/polo" class="text-gray-500 hover:text-gray-600">Camisas Polo</a>
-                </li>
-                <li class="text-sm">
-                  <a routerLink="/products/all/camisa" class="text-gray-500 hover:text-gray-600">Camisas Empresariales</a>
-                </li>
-                <li class="text-sm">
-                  <a routerLink="/products/all/all" class="text-gray-500 hover:text-gray-600">Ver todo el catálogo</a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 class="text-sm font-medium text-gray-900">Empresa</h3>
-              <ul role="list" class="mt-6 space-y-6">
-                <li class="text-sm">
-                  <a routerLink="/about-us" class="text-gray-500 hover:text-gray-600">Quiénes somos</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="space-y-16 md:grid md:grid-cols-2 md:gap-8 md:space-y-0">
-            <div>
-              <h3 class="text-sm font-medium text-gray-900">Mi cuenta</h3>
-              <ul role="list" class="mt-6 space-y-6">
-                <li class="text-sm">
-                  <a routerLink="/my-orders" class="text-gray-500 hover:text-gray-600">Mis pedidos</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+    <!-- ── Final call to action ─────────────────────────────────────────── -->
+    <section aria-labelledby="final-cta-heading" class="text-center">
+      <div aria-hidden="true" class="flex justify-center -space-x-3">
+        @for (item of categories; track item.value) {
+          <span
+            class="size-10 rounded-full ring-4 ring-white"
+            [style.backgroundImage]="item.gradient"
+          ></span>
+        }
       </div>
-    </div>
-  </footer>
+      <h2
+        id="final-cta-heading"
+        class="mx-auto mt-8 max-w-2xl font-serif text-4xl tracking-tight text-stone-900 sm:text-5xl"
+      >
+        Encuentra tu próximo favorito.
+      </h2>
+      <p class="mx-auto mt-4 max-w-md text-stone-600">
+        Recorre el catálogo completo y filtra por categoría, subcategoría o marca.
+      </p>
+      <a
+        routerLink="/products"
+        class="mt-8 inline-flex min-h-12 items-center justify-center rounded-full bg-stone-900 px-8 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-700"
+      >
+        Ver todos los productos
+      </a>
+    </section>
+  </div>
 </div>

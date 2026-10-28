@@ -138,39 +138,7 @@
       </div>
       <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
         @for (product of products(); track product.id) {
-          <article
-            class="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
-          >
-            <a [routerLink]="['/product', product.slug]" class="block">
-              <img
-                [ngSrc]="product.images | productImage"
-                width="480"
-                height="480"
-                [alt]="product.title"
-                class="aspect-square w-full bg-gray-50 object-contain p-4"
-              />
-              <div class="p-5 pb-2">
-                <p class="text-xs font-semibold tracking-wider text-gray-600 uppercase">
-                  {{ product.brand.name }}
-                </p>
-                <h3 class="mt-2 text-base font-semibold break-words">{{ product.title }}</h3>
-              </div>
-            </a>
-            <div class="flex flex-1 flex-col px-5 pb-5">
-              <p class="text-sm text-gray-600">
-                {{ categoryLabel(product.category) }} · {{ product.subcategory.name }}
-              </p>
-              <div class="mt-auto flex flex-wrap items-center justify-between gap-2 pt-5">
-                <p class="text-lg font-semibold">
-                  {{ product.price | currency: 'GTQ' : 'Q' : '1.2-2' }}
-                </p>
-                <span
-                  class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-800"
-                  >{{ product.stock > 0 ? 'En stock' : 'Sin stock' }}</span
-                >
-              </div>
-            </div>
-          </article>
+          <product-card [product]="product" [priority]="$index < 3" />
         }
         @if (productsLoading()) {
           @for (placeholder of [1, 2, 3]; track placeholder) {

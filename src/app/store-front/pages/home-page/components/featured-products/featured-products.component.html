@@ -1,0 +1,94 @@
+<section aria-labelledby="featured-heading" [attr.aria-busy]="state() === 'loading'">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">
+        Selección LuminaBeauty
+      </p>
+      <h2
+        id="featured-heading"
+        class="mt-2 font-serif text-3xl tracking-tight text-stone-900 sm:text-4xl"
+      >
+        Productos destacados
+      </h2>
+      <p class="mt-2 text-sm text-stone-600">Disponibles hoy en nuestro catálogo.</p>
+    </div>
+    <a
+      routerLink="/products"
+      class="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-stone-900 underline-offset-4 hover:underline"
+    >
+      Ver catálogo completo<span aria-hidden="true">&rarr;</span>
+    </a>
+  </div>
+
+  <div class="mt-8">
+    @switch (state()) {
+      @case ('loading') {
+        <p role="status" class="sr-only">Cargando productos destacados…</p>
+        <div
+          aria-hidden="true"
+          data-testid="featured-skeleton"
+          class="grid grid-cols-1 gap-6 min-[420px]:grid-cols-2 lg:grid-cols-4"
+        >
+          @for (placeholder of placeholders; track placeholder) {
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              <div class="aspect-square animate-pulse bg-stone-100"></div>
+              <div class="space-y-3 p-5">
+                <div class="h-3 w-1/3 animate-pulse rounded bg-stone-100"></div>
+                <div class="h-4 w-4/5 animate-pulse rounded bg-stone-100"></div>
+                <div class="h-4 w-1/4 animate-pulse rounded bg-stone-100"></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+      @case ('error') {
+        <div
+          role="status"
+          class="flex flex-col items-start gap-4 rounded-2xl border border-stone-200 bg-stone-50 p-6 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <p class="font-medium text-stone-900">
+              No pudimos mostrar los destacados en este momento.
+            </p>
+            <p class="mt-1 text-sm text-stone-600">
+              El catálogo sigue disponible mientras lo intentamos de nuevo.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              (click)="retry()"
+              class="min-h-11 rounded-full border border-stone-300 bg-white px-5 text-sm font-semibold text-stone-900 transition hover:border-stone-900"
+            >
+              Reintentar
+            </button>
+            <a
+              routerLink="/products"
+              class="inline-flex min-h-11 items-center rounded-full bg-stone-900 px-5 text-sm font-semibold text-white transition hover:bg-stone-700"
+            >
+              Ir al catálogo
+            </a>
+          </div>
+        </div>
+      }
+      @default {
+        @if (products().length > 0) {
+          <ul role="list" class="grid grid-cols-1 gap-6 min-[420px]:grid-cols-2 lg:grid-cols-4">
+            @for (product of products(); track product.id) {
+              <li class="min-w-0">
+                <product-card [product]="product" />
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="rounded-2xl border border-dashed border-stone-300 bg-white p-8 text-center">
+            <p class="font-serif text-xl text-stone-900">Estamos preparando la selección.</p>
+            <p class="mt-2 text-sm text-stone-600">
+              Muy pronto encontrarás aquí productos disponibles para comprar.
+            </p>
+          </div>
+        }
+      }
+    }
+  </div>
+</section>

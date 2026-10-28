@@ -6,9 +6,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import {
   catchError,
   EMPTY,
@@ -23,7 +22,7 @@ import {
   tap,
 } from 'rxjs';
 import { ProductService } from '../../../products/services/product.service';
-import { ProductImagePipe } from '../../../products/pipes/product-image.pipe';
+import { ProductCardComponent } from '../../../products/components/product-card/product-card.component';
 import {
   Brand,
   Product,
@@ -41,7 +40,7 @@ import { ScrollStateService } from '../../../shared/services/scroll-state.servic
 
 @Component({
   selector: 'app-products-page',
-  imports: [ProductImagePipe, CurrencyPipe, NgOptimizedImage, RouterLink],
+  imports: [ProductCardComponent],
   templateUrl: './products-page.html',
   styleUrl: './products-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

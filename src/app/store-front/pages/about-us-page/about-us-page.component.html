@@ -1,102 +1,250 @@
-<section class="relative overflow-hidden bg-gradient-to-b from-white to-gray-50 min-h-[80vh] flex items-center">
+<div class="overflow-x-clip px-4 pt-6 pb-20 text-stone-900 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl space-y-20 sm:space-y-28">
+    <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+    <section aria-labelledby="about-heading" class="pt-8 sm:pt-12">
+      <div class="grid items-center gap-14 lg:grid-cols-[1.15fr_1fr]">
+        <div>
+          <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">
+            Sobre LuminaBeauty
+          </p>
+          <h1
+            id="about-heading"
+            class="mt-5 font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+          >
+            Belleza que <br class="hidden sm:block" /><em class="text-rose-700">conecta</em>
+            contigo.
+          </h1>
+          <p class="mt-6 max-w-lg text-lg leading-relaxed text-stone-600">
+            Somos una tienda en línea de maquillaje, cuidado de la piel, fragancias y cuidado
+            personal. Reunimos productos para distintas rutinas y estilos, y los ordenamos para que
+            elegir sea fácil.
+          </p>
+          <div class="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <a
+              routerLink="/products"
+              class="inline-flex min-h-12 items-center justify-center rounded-full bg-stone-900 px-7 text-sm font-semibold text-white shadow-sm transition hover:bg-stone-700"
+            >
+              Explorar productos
+            </a>
+            <a
+              href="#experiencia"
+              class="inline-flex min-h-12 items-center justify-center rounded-full border border-stone-300 bg-white px-7 text-sm font-semibold text-stone-900 transition hover:border-stone-900"
+            >
+              Cómo funciona
+            </a>
+          </div>
+        </div>
 
-  <!-- Decorative blurred circles -->
-  <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
-    <div class="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-gray-200 opacity-40 blur-3xl"></div>
-    <div class="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-gray-300 opacity-30 blur-3xl"></div>
-    <div class="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-100 opacity-30 blur-3xl"></div>
-  </div>
-
-  <div class="relative mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-3xl text-center">
-
-      <!-- Badge -->
-      <span class="mb-6 inline-flex items-center gap-x-1.5 rounded-full bg-gray-900 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white shadow-sm">
-        <span class="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>
-        Próximamente
-      </span>
-
-      <!-- Icon -->
-      <div class="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-white shadow-lg ring-1 ring-gray-100">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-        </svg>
+        <!-- Decorative stack of category artwork -->
+        <div
+          aria-hidden="true"
+          class="relative isolate mx-auto aspect-[5/4] w-full max-w-md lg:max-w-none"
+        >
+          <div
+            class="absolute inset-[10%] -z-10 rounded-full bg-gradient-to-br from-rose-100 to-amber-100 blur-3xl"
+          ></div>
+          @for (card of heroCards; track card.value; let index = $index) {
+            <div
+              class="absolute w-[50%] overflow-hidden rounded-[1.75rem] shadow-xl shadow-stone-900/10 ring-4 ring-white"
+              [class]="
+                index === 0
+                  ? 'top-[4%] left-[3%] -rotate-6'
+                  : index === 1
+                    ? 'top-[8%] right-[3%] rotate-6'
+                    : 'bottom-[3%] left-[25%] -rotate-2'
+              "
+              [style.backgroundImage]="card.gradient"
+            >
+              <img
+                [ngSrc]="card.image"
+                width="600"
+                height="600"
+                alt=""
+                priority
+                class="aspect-square w-full object-cover"
+              />
+            </div>
+          }
+          <div
+            class="absolute right-[2%] bottom-[8%] max-w-[11rem] rotate-3 rounded-2xl bg-white p-4 text-sm leading-snug text-stone-700 shadow-lg ring-1 ring-stone-100"
+          >
+            <span class="block font-serif text-base text-stone-900">Nota del día</span>
+            Hidratación por la mañana y un toque de color en los labios.
+          </div>
+        </div>
       </div>
+    </section>
 
-      <!-- Heading -->
-      <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-        Estamos preparando<br class="hidden sm:block" />
-        <span class="text-gray-600"> esta sección</span>
-      </h1>
+    <!-- ── Our idea ─────────────────────────────────────────────────────── -->
+    <section
+      aria-labelledby="story-heading"
+      class="grid gap-10 rounded-[2rem] bg-gradient-to-br from-rose-50 to-amber-50/70 px-6 py-12 ring-1 ring-rose-100 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:px-14"
+    >
+      <div>
+        <h2
+          id="story-heading"
+          class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase"
+        >
+          Nuestra idea
+        </h2>
+        <blockquote class="mt-5 font-serif text-3xl leading-tight tracking-tight sm:text-4xl">
+          “La belleza es personal. Encontrar lo que te gusta no debería ser complicado.”
+        </blockquote>
+      </div>
+      <div class="space-y-5 self-end leading-relaxed text-stone-700">
+        <p>
+          LuminaBeauty nació con una idea sencilla: que descubrir y comprar productos de belleza en
+          línea sea tan claro como pedirle una recomendación a alguien que sabe.
+        </p>
+        <p>
+          Por eso ordenamos el catálogo por categorías, del cuidado de la piel al perfume, y en cada
+          producto mostramos lo que necesitas antes de decidir: marca, precio y disponibilidad.
+        </p>
+        <dl class="grid grid-cols-3 gap-4 border-t border-rose-200/70 pt-6">
+          <div class="flex flex-col">
+            <dt class="text-xs text-stone-600">Categorías</dt>
+            <dd class="order-first font-serif text-3xl text-stone-900">{{ categories.length }}</dd>
+          </div>
+          <div class="flex flex-col">
+            <dt class="text-xs text-stone-600">Carrito para todo</dt>
+            <dd class="order-first font-serif text-3xl text-stone-900">1</dd>
+          </div>
+          <div class="flex flex-col">
+            <dt class="text-xs text-stone-600">Etapas de seguimiento</dt>
+            <dd class="order-first font-serif text-3xl text-stone-900">5</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
 
-      <!-- Subtitle -->
-      <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-500">
-        Muy pronto conocerás más sobre ProWear, nuestra historia y la forma en que creamos uniformes personalizados con calidad profesional.
-      </p>
+    <!-- ── Purpose ──────────────────────────────────────────────────────── -->
+    <section aria-labelledby="purpose-heading">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">
+          Para qué existimos
+        </p>
+        <h2 id="purpose-heading" class="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">
+          Nuestro propósito
+        </h2>
+      </div>
+      <ol role="list" class="mt-10 grid gap-10 md:grid-cols-3 md:gap-8">
+        @for (item of purpose; track item.title; let index = $index) {
+          <li class="border-t border-stone-900 pt-6">
+            <span aria-hidden="true" class="font-serif text-5xl text-rose-300"
+              >0{{ index + 1 }}</span
+            >
+            <h3 class="mt-3 text-xl font-semibold">{{ item.title }}</h3>
+            <p class="mt-2 leading-relaxed text-stone-600">{{ item.description }}</p>
+          </li>
+        }
+      </ol>
+    </section>
 
-      <!-- Helper text -->
-      <p class="mx-auto mt-3 max-w-xl text-base text-gray-400">
-        Mientras tanto, puedes explorar nuestros productos y encontrar las prendas ideales para tu empresa, equipo o negocio.
-      </p>
+    <!-- ── Values ───────────────────────────────────────────────────────── -->
+    <section aria-labelledby="values-heading">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">Valores</p>
+        <h2 id="values-heading" class="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">
+          Lo que nos mueve
+        </h2>
+      </div>
+      <ul role="list" class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        @for (value of values; track value.title; let first = $first) {
+          @if (first) {
+            <li
+              class="relative isolate flex flex-col justify-end overflow-hidden rounded-[1.75rem] bg-stone-900 p-8 text-white sm:col-span-2 lg:row-span-2 lg:min-h-80"
+            >
+              <div aria-hidden="true" class="absolute top-8 left-8 -z-10 flex flex-wrap gap-2">
+                @for (item of categories; track item.value) {
+                  <span
+                    class="size-7 rounded-full opacity-90 sm:size-9"
+                    [style.backgroundImage]="item.gradient"
+                  ></span>
+                }
+              </div>
+              <h3 class="mt-24 font-serif text-3xl">{{ value.title }}</h3>
+              <p class="mt-3 max-w-md leading-relaxed text-stone-300">{{ value.description }}</p>
+            </li>
+          } @else {
+            <li class="rounded-[1.5rem] border border-stone-200 bg-white p-6">
+              <h3 class="font-serif text-2xl">{{ value.title }}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-stone-600">{{ value.description }}</p>
+            </li>
+          }
+        }
+      </ul>
+    </section>
 
-      <!-- CTAs -->
-      <div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+    <!-- ── Customer journey ─────────────────────────────────────────────── -->
+    <section id="experiencia" aria-labelledby="journey-heading" class="scroll-mt-24">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold tracking-[0.2em] text-rose-700 uppercase">
+          De principio a fin
+        </p>
+        <h2 id="journey-heading" class="mt-2 font-serif text-3xl tracking-tight sm:text-4xl">
+          Tu experiencia LuminaBeauty
+        </h2>
+      </div>
+      <ol role="list" class="mt-12 grid gap-10 lg:grid-cols-5 lg:gap-6">
+        @for (step of journey; track step.title; let index = $index, last = $last) {
+          <li class="relative pl-16 lg:pl-0 lg:pt-16">
+            @if (!last) {
+              <span
+                aria-hidden="true"
+                class="absolute top-12 bottom-[-2.5rem] left-6 w-px bg-rose-200 lg:top-6 lg:right-[-1.5rem] lg:bottom-auto lg:left-12 lg:h-px lg:w-auto"
+              ></span>
+            }
+            <span
+              aria-hidden="true"
+              class="absolute top-0 left-0 flex size-12 items-center justify-center rounded-full bg-rose-50 font-serif text-lg text-rose-700 ring-1 ring-rose-200"
+              >{{ index + 1 }}</span
+            >
+            <h3 class="pt-2.5 text-lg font-semibold lg:pt-0">{{ step.title }}</h3>
+            <p class="mt-1 text-sm leading-relaxed text-stone-600">{{ step.description }}</p>
+            @if (step.link; as link) {
+              <a
+                [routerLink]="link.path"
+                class="mt-3 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-rose-700 underline-offset-4 hover:underline"
+                >{{ link.label }}<span aria-hidden="true">&rarr;</span></a
+              >
+            }
+          </li>
+        }
+      </ol>
+    </section>
+
+    <!-- ── Closing message ──────────────────────────────────────────────── -->
+    <section
+      aria-labelledby="about-cta-heading"
+      class="relative isolate overflow-hidden rounded-[2rem] bg-stone-900 px-6 py-16 text-center text-white sm:px-10 sm:py-20"
+    >
+      <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10">
+        <div class="absolute -top-24 left-1/4 size-72 rounded-full bg-rose-400/20 blur-3xl"></div>
+        <div
+          class="absolute -right-10 -bottom-24 size-72 rounded-full bg-amber-300/15 blur-3xl"
+        ></div>
+      </div>
+      <h2
+        id="about-cta-heading"
+        class="font-serif text-4xl leading-tight tracking-tight sm:text-5xl"
+      >
+        Tu rutina. Tu estilo.<br />
+        <em class="text-rose-200">Tu LuminaBeauty.</em>
+      </h2>
+      <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <a
-          routerLink="/products/all/all"
-          class="inline-flex items-center gap-x-2 rounded-full bg-gray-900 px-7 py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
+          routerLink="/products"
+          class="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-white px-8 text-sm font-semibold text-stone-900 transition hover:bg-rose-50 sm:w-auto"
+        >
           Explorar productos
         </a>
-
         <a
           routerLink="/"
-          class="inline-flex items-center gap-x-1.5 text-sm font-semibold text-gray-600 transition hover:text-gray-900">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
+          class="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-white/30 px-8 text-sm font-semibold text-white transition hover:border-white sm:w-auto"
+        >
           Volver al inicio
         </a>
       </div>
-
-      <!-- Feature preview cards -->
-      <div class="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 text-left">
-          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-            </svg>
-          </div>
-          <h3 class="text-sm font-semibold text-gray-900">Nuestra historia</h3>
-          <p class="mt-1 text-xs text-gray-400">Conoce los orígenes y valores que nos impulsan a crear la mejor ropa corporativa.</p>
-        </div>
-
-        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 text-left">
-          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-            </svg>
-          </div>
-          <h3 class="text-sm font-semibold text-gray-900">Personalización profesional</h3>
-          <p class="mt-1 text-xs text-gray-400">Diseños a medida con bordados, serigrafía y sublimación de alta calidad.</p>
-        </div>
-
-        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 text-left">
-          <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-            </svg>
-          </div>
-          <h3 class="text-sm font-semibold text-gray-900">Calidad ProWear</h3>
-          <p class="mt-1 text-xs text-gray-400">Materiales premium seleccionados para garantizar durabilidad y confort en cada prenda.</p>
-        </div>
-
-      </div>
-
-    </div>
+    </section>
   </div>
-
-</section>
+</div>
